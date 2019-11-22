@@ -1,9 +1,11 @@
-# My beautiful actor
+### Smart article extractor
 
-The `README.md` file contains a documentation what your actor does and how to use it,
-which is then displayed in the app or Apify Store. It's always a good
-idea to write a good `README.md`, in a few months not even you
-will remember all the details about the actor.
+This actor is an extension of Apify's [Article Text Extractor](https://apify.com/mtrunkat/article-text-extractor). It has several extra features:
 
-You can use [Markdown](https://www.markdownguide.org/cheat-sheet)
-language for rich formatting.
+- Allows extraction of any number of URLs - support for Start URLs, Pseudo URLs and max crawling depth
+- Smart article recognition - Actor can decide what pages on a website are in fact articles to be scraped. This is customizable.
+- Additional filters - Date of articles, minimum words
+- Date normalization
+- Some extra data fields
+
+More detailed documentation to come...

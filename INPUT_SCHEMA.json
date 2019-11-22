@@ -16,7 +16,7 @@
             "description": "If true, will scrape only new articles each you run it. All URLs you scraped are saved in dataset called `articles-state` and are compared with new ones."
         },
         "onlyInsideArticles": {
-            "title": "Only new articles",
+            "title": "Only inside domain articles",
             "type": "boolean",
             "description": "If true, will scrape only articles that are on the domain from where they are linked."
         },
@@ -31,7 +31,7 @@
             "default": 150,
             "description": "Article need to contain at least this amount of words to be extracted",
             "sectionCaption": "Article recognition",
-            "sectionDescription": "Use these settings to tell the actor what article should be scraped. Leaving then as they are usually works fine."
+            "sectionDescription": "These settings tell the actor what articles should be scraped. Leaving default values usually works fine."
         },
         "dateFrom": {
             "title": "Date from",
@@ -52,7 +52,7 @@
             "description": "Can be used to enqueue more pages like pagination or categories. Doesn't work for articles, they are recognized by the recognition system.",
             "editor": "requestListSources",
             "sectionCaption": "Custom enqueueing",
-            "sectionDescription": "Use these setting to enqueue more pages. If you want to enqueue direct article URLs this way, you have to add `{ \"label\": \"article\"}` to the userData`"
+            "sectionDescription": "Use these settings to enqueue more pages. If you want to enqueue direct article URLs this way, you have to add `{ \"label\": \"article\"}` to the userData`"
         },
         "linkSelector": {
             "title": "Link selector",

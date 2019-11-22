@@ -37,14 +37,14 @@
             "title": "Date from",
             "type": "string",
             "description": "Only articles from this day to present will be scraped. If empty, all articles will be scraped. Format is YYYY-MM-DD, e.g. 2019-12-31",
-            "editor":" textfield"
+            "editor": "textfield"
         },
         "isUrlArticleDefinition": {
             "title": "Is URL article?",
             "type": "object",
             "description": "JSON settings of what considered a link to an article. If any of them is true, then the link will be opened.",
             "editor": "json",
-            "prefill": "{\n    \"minDashes\": 4,\n     \"linkIncludes\": [\"article\", \"storyid\", \"2019\", \"?p=\", \"id=\", \"/fpss/track\", \".html\", \"/content/\"]\n}"
+            "prefill": { "minDashes": 4, "linkIncludes": ["article", "storyid", "2019", "?p=", "id=", "/fpss/track", ".html", "/content/"]}
         },
         "pseudoUrls": {
             "title": "Pseudo URLs",

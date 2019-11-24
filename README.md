@@ -9,8 +9,8 @@ This actor is an extension of Apify's [Article Text Extractor](https://apify.com
 - Some extra data fields
 
 Example output:
-- [JSON](https://api.apify.com/v2/datasets/BrFi54q7cMrKe5D7J/items?format=json&clean=1) (looks the best)
-- [Table](https://api.apify.com/v2/datasets/BrFi54q7cMrKe5D7J/items?format=html&clean=1)
-- [CSV](https://api.apify.com/v2/datasets/BrFi54q7cMrKe5D7J/items?format=csv&attachment=1&clean=1)
+- [JSON](https://api.apify.com/v2/datasets/mNg8AeuevQKjBhtTX/items?format=json&clean=1) (looks the best)
+- [Table](https://api.apify.com/v2/datasets/mNg8AeuevQKjBhtTX/items?format=html&clean=1)
+- [CSV](https://api.apify.com/v2/datasets/mNg8AeuevQKjBhtTX/items?format=csv&attachment=1&clean=1)
 
 More detailed documentation to come...

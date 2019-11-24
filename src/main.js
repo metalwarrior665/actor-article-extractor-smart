@@ -221,7 +221,6 @@ Apify.main(async () => {
 
             metadata.date = chrono.parseDate(metadata.date);
 
-
             const isInDateRangeVar = isInDateRange(metadata.date, dateFrom);
             if (!isInDateRangeVar && !!metadata.date && countWords(metadata.text)) {
                 console.log(`ARTICLE - ${request.userData.index} - DATE NOT IN RANGE: ${metadata.date}`);
@@ -233,8 +232,7 @@ Apify.main(async () => {
                 loadedUrl,
                 domain: request.userData.domain,
                 loadedDomain: request.userData.loadedDomain,
-                isArticle: !!metadata.date && !!metadata.title && wordsCount > minWords && isInDateRangeVar,
-                metadata,
+                ...metadata,
                 html: saveHtml ? html : undefined,
             };
 
@@ -243,7 +241,9 @@ Apify.main(async () => {
                 await stateDataset.pushData({ url: request.url });
             }
 
-            if (result.isArticle) {
+            const isArticle = !!metadata.date && !!metadata.title && wordsCount > minWords && isInDateRangeVar;
+
+            if (isArticle) {
                 console.log(`IS VALID ARTICLE --- ${request.url}`);
                 await Apify.pushData(result);
             } else {

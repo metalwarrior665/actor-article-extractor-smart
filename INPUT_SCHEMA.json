@@ -18,7 +18,8 @@
         "onlyInsideArticles": {
             "title": "Only inside domain articles",
             "type": "boolean",
-            "description": "If true, will scrape only articles that are on the domain from where they are linked."
+            "description": "If true, will scrape only articles that are on the domain from where they are linked.",
+            "prefill": true
         },
         "saveHtml": {
             "title": "Save full HTML",
@@ -36,15 +37,21 @@
         "dateFrom": {
             "title": "Date from",
             "type": "string",
-            "description": "Only articles from this day to present will be scraped. If empty, all articles will be scraped. Format is YYYY-MM-DD, e.g. 2019-12-31",
+            "description": "Only articles from this day to present will be scraped. If empty, all articles will be scraped. Format is YYYY-MM-DD, e.g. 2019-12-31, or Number type e.g. 1 week or 20 days",
             "editor": "textfield"
+        },
+        "mustHaveDate": {
+            "title": "Must have date",
+            "type": "boolean",
+            "description": "If checked, the article must have a date of release to be considered valid.",
+            "prefill": true
         },
         "isUrlArticleDefinition": {
             "title": "Is URL article?",
             "type": "object",
             "description": "JSON settings of what considered a link to an article. If any of them is true, then the link will be opened.",
             "editor": "json",
-            "prefill": { "minDashes": 4, "linkIncludes": ["article", "storyid", "2019", "?p=", "id=", "/fpss/track", ".html", "/content/"]}
+            "prefill": { "minDashes": 4, "linkIncludes": ["article", "storyid", "?p=", "id=", "/fpss/track", ".html", "/content/"], "hasDate": true }
         },
         "pseudoUrls": {
             "title": "Pseudo URLs",
@@ -65,6 +72,16 @@
             "type": "integer",
             "description": "Maximum depth of crawling. 0 is only start URLs, 1 are first level links etc. Only valid for pseudo URLs"
         },
+        "maxPagesPerCrawl": {
+            "title": "Max pages per crawl",
+            "type": "integer",
+            "description": "Maximum number of total pages crawled. Includes home page, pagination pages, invalid articles etc."
+        },
+        "maxArticlesPerCrawl": {
+            "title": "Max articles per crawl",
+            "type": "integer",
+            "description": "Maximum number of valid articles scraped. The crawler will stop automatically after reaching this number."
+        },
         "proxyConfiguration": {
             "title": "Proxy configuration",
             "type": "object",
@@ -72,6 +89,14 @@
             "prefill": { "useApifyProxy": true },
             "editor": "proxy",
             "sectionCaption": "Proxy configuration"
+        },
+        "extendOutputFunction": {
+            "Title": "Extend output function",
+            "type": "string",
+            "description": "A function that allows you to merge your custom extraction with the default one. You have to return an object from this function. This object will be merged/overwrite the default output for each article.",
+            "prefill": "($) => {\n    const result = {};\n    // Uncomment to add a title to the output\n    // result.pageTitle = $('title').text().trim();\n\n    return result;\n}",
+            "sectionCaption": "Extend Output Function",
+            "sectionDescription": "This is only needed if the default output is not good enough for you. Be careful that you should provide valid JavaScript."
         }
     }
 }

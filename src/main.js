@@ -2,53 +2,14 @@ const Apify = require('apify');
 const extractor = require('unfluff');
 const chrono = require('chrono-node');
 const urlLib = require('url');
+const moment = require('moment');
+
+const { parseDateToMoment, loadAllDataset, executeExtendOutputFn, isDateValid, findDateInURL } = require('./utils.js');
+const { countWords, isUrlArticle, isInDateRange } = require('./article-recognition.js');
 
 const { log } = Apify.utils;
 
 const MAX_DATASET_ITEMS_LOADED = 3 * 1000 * 1000;
-
-const loadAllDataset = async (dataset, items, offset) => {
-    const limit = 250000;
-    const newItems = await dataset.getData({ offset, limit }).then((res) => res.items);
-    items = items.concat(newItems);
-    console.log(`Loaded ${newItems.length} items, totally ${items.length}`);
-    if (newItems.length === 0) return items;
-    return loadAllDataset(dataset, items, offset + limit).catch((e) => items);
-};
-
-const countWords = (text) => {
-    if (typeof text !== 'string') return false;
-    return text.split(' ').length;
-};
-
-const isUrlArticle = (url, isUrlArticleDefinition) => {
-    if (!isUrlArticleDefinition) {
-        return true;
-    }
-    const matches = isUrlArticleDefinition.linkIncludes || [];
-    for (const string of matches) {
-        if (url.toLowerCase().includes(string)) {
-            return true;
-        }
-    }
-
-    const minDashes = isUrlArticleDefinition.minDashes || 0;
-
-    const dashes = url.split('').reduce((acc, char) => char === '-' ? acc + 1 : acc, 0);
-    if (dashes >= minDashes) {
-        return true;
-    }
-    return false;
-};
-
-const isInDateRange = (publicationDateISO, dateFrom) => {
-    if (!dateFrom) {
-        return true;
-    }
-    const publicationDate = new Date(publicationDateISO);
-    const dateFromDate = new Date(dateFrom); // This can be any string that can be converted to a date
-    return publicationDate > dateFromDate;
-};
 
 const parseDomain = (url) => {
     if (!url) return null;
@@ -71,24 +32,41 @@ Apify.main(async () => {
     const {
         startUrls,
         onlyNewArticles = false,
-        onlyInsideArticles = false,
+        onlyInsideArticles = true,
         saveHtml = false,
         minWords = 150,
         dateFrom,
         isUrlArticleDefinition,
+        mustHaveDate = true,
         pseudoUrls,
         linkSelector,
         maxDepth,
+        maxPagesPerCrawl,
+        maxArticlesPerCrawl,
         proxyConfiguration = { useApifyProxy: true },
         debug = false,
+        extendOutputFunction,
     } = input;
 
-    if (dateFrom) {
-        const date = new Date(dateFrom);
-        if (!date || date === 'Invalid Date') {
-            throw new Error('WRONG INPUT: dateFrom is not a valid date');
-        }
+    let articlesScraped = (await Apify.getValue('ARTICLES-SCRAPED')) || 0;
+    Apify.events.on('migrating', async () => {
+        await Apify.setValue('ARTICLES-SCRAPED', articlesScraped);
+    });
+
+    let extendOutputFunctionEvaled;
+    try {
+        extendOutputFunctionEvaled = eval(extendOutputFunction);
+    } catch (e) {
+        throw new Error(`extendOutputFunction is not a valid JavaScript! Error: ${e}`);
     }
+    if (typeof extendOutputFunctionEvaled !== 'function') {
+        throw new Error(`extendOutputFunction is not a function! Please fix it or use just default output!`);
+    }
+
+
+    // Valid format is either YYYY-MM-DD or format like "1 week" or "20 days"
+    const parsedDateFrom = parseDateToMoment(dateFrom);
+    console.log(parsedDateFrom);
 
     const arePseudoUrls = pseudoUrls && pseudoUrls.length > 0;
     if ((arePseudoUrls && !linkSelector) || (linkSelector && !arePseudoUrls)) {
@@ -127,7 +105,7 @@ Apify.main(async () => {
         }
     }
 
-    const handlePageFunction = async ({ request, $, html, response }) => {
+    const handlePageFunction = async ({ request, $, body }) => {
         const title = $('title').text();
 
         const { loadedUrl } = request;
@@ -187,7 +165,7 @@ Apify.main(async () => {
                 });
             }
             if (debug) {
-                await Apify.setValue(Math.random().toString(), html, { contentType: 'text/html' });
+                await Apify.setValue(Math.random().toString(), body, { contentType: 'text/html' });
             }
 
             // We handle optional pseudo URLs and link selectors here
@@ -217,15 +195,28 @@ Apify.main(async () => {
         }
 
         if (request.userData.label === 'ARTICLE') {
-            const metadata = extractor(html);
+            const metadata = extractor(body);
 
-            metadata.date = chrono.parseDate(metadata.date);
+            console.log('Raw date:', metadata.date);
 
-            const isInDateRangeVar = isInDateRange(metadata.date, dateFrom);
-            if (!isInDateRangeVar && !!metadata.date && countWords(metadata.text)) {
-                console.log(`ARTICLE - ${request.userData.index} - DATE NOT IN RANGE: ${metadata.date}`);
+            // We try native new Date() first and then Chrono
+            let parsedPageDate;
+            if (metadata.date) {
+                const nativeDate = new Date(metadata.date);
+                if (isDateValid(nativeDate)) {
+                    parsedPageDate = moment(nativeDate.toISOString());
+                } else {
+                    parsedPageDate = chrono.parseDate(metadata.date);
+                }
             }
-            const wordsCount = countWords(metadata.text);
+
+            if (!parsedPageDate) {
+                parsedPageDate = findDateInURL(request.url);
+            }
+
+            metadata.date = parsedPageDate || null;
+
+            console.log('Parsed date:', metadata.date);
 
             const result = {
                 url: request.url,
@@ -233,21 +224,43 @@ Apify.main(async () => {
                 domain: request.userData.domain,
                 loadedDomain: request.userData.loadedDomain,
                 ...metadata,
-                html: saveHtml ? html : undefined,
+                html: saveHtml ? body : undefined,
             };
 
+            const userResult = await executeExtendOutputFn(extendOutputFunctionEvaled, $);
+            const completeResult = { ...result, ...userResult };
+
+            const wordsCount = countWords(completeResult.text);
+
+            const isInDateRangeVar = isInDateRange(completeResult.date, parsedDateFrom);
+            if (mustHaveDate && !isInDateRangeVar && !!completeResult.date) {
+                console.log(`ARTICLE - ${request.userData.index} - DATE NOT IN RANGE: ${completeResult.date}`);
+                return;
+            }
+
             if (onlyNewArticles) {
-                state[result.url] = true;
+                state[completeResult.url] = true;
                 await stateDataset.pushData({ url: request.url });
             }
 
-            const isArticle = !!metadata.date && !!metadata.title && wordsCount > minWords && isInDateRangeVar;
+            const hasValidDate = mustHaveDate ? isInDateRangeVar : true;
+
+            const isArticle =
+                hasValidDate
+                && !!completeResult.title
+                && wordsCount > minWords;
 
             if (isArticle) {
                 console.log(`IS VALID ARTICLE --- ${request.url}`);
-                await Apify.pushData(result);
+                await Apify.pushData(completeResult);
+                articlesScraped++;
+
+                if (maxArticlesPerCrawl && articlesScraped >= maxArticlesPerCrawl) {
+                    console.log(`WE HAVE REACHED MAXIMUM ARTICLES: ${maxArticlesPerCrawl}. FINISHING CRAWLING...`);
+                    process.exit(0);
+                }
             } else {
-                console.log(`IS NOT VALID ARTICLE --- date: ${!!metadata.date}, title: ${!!metadata.title}, words: ${wordsCount}, dateRange: ${isInDateRangeVar} --- ${request.url}`);
+                console.log(`IS NOT VALID ARTICLE --- date: ${hasValidDate}, title: ${!!completeResult.title}, words: ${wordsCount}, dateRange: ${isInDateRangeVar} --- ${request.url}`);
             }
         }
     };
@@ -256,6 +269,7 @@ Apify.main(async () => {
         requestQueue,
         handlePageFunction,
         maxRequestRetries: 3,
+        maxRequestsPerCrawl: maxPagesPerCrawl,
         useApifyProxy: proxyConfiguration.useApifyProxy,
         apifyProxyGroups: proxyConfiguration.apifyProxyGroups,
     });

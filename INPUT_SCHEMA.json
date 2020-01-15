@@ -51,7 +51,7 @@
             "type": "object",
             "description": "JSON settings of what considered a link to an article. If any of them is true, then the link will be opened.",
             "editor": "json",
-            "prefill": { "minDashes": 4, "linkIncludes": ["article", "storyid", "?p=", "id=", "/fpss/track", ".html", "/content/"], "hasDate": true }
+            "prefill": { "minDashes": 4, "hasDate": true, "linkIncludes": ["article", "storyid", "?p=", "id=", "/fpss/track", ".html", "/content/"] }
         },
         "pseudoUrls": {
             "title": "Pseudo URLs",

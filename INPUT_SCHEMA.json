@@ -19,7 +19,7 @@
             "title": "Only inside domain articles",
             "type": "boolean",
             "description": "If true, will scrape only articles that are on the domain from where they are linked.",
-            "prefill": true
+            "default": true
         },
         "saveHtml": {
             "title": "Save full HTML",
@@ -44,7 +44,7 @@
             "title": "Must have date",
             "type": "boolean",
             "description": "If checked, the article must have a date of release to be considered valid.",
-            "prefill": true
+            "default": true
         },
         "isUrlArticleDefinition": {
             "title": "Is URL article?",
@@ -91,12 +91,13 @@
             "sectionCaption": "Proxy configuration"
         },
         "extendOutputFunction": {
-            "Title": "Extend output function",
+            "title": "Extend output function",
             "type": "string",
             "description": "A function that allows you to merge your custom extraction with the default one. You have to return an object from this function. This object will be merged/overwrite the default output for each article.",
             "prefill": "($) => {\n    const result = {};\n    // Uncomment to add a title to the output\n    // result.pageTitle = $('title').text().trim();\n\n    return result;\n}",
             "sectionCaption": "Extend Output Function",
-            "sectionDescription": "This is only needed if the default output is not good enough for you. Be careful that you should provide valid JavaScript."
+            "sectionDescription": "This is only needed if the default output is not good enough for you. Be careful that you should provide valid JavaScript.",
+            "editor": "javascript"
         }
     }
 }

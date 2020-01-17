@@ -41,6 +41,11 @@ module.exports.executeExtendOutputFn = async (fn, $) => {
     const isObject = (val) => typeof val === 'object' && val !== null && !Array.isArray(val);
 
     let userResult = {};
+
+    if (!fn) {
+        return userResult;
+    }
+
     try {
         // For Puppeteer, you will need to do this inside page.evaluate
         userResult = await fn($);

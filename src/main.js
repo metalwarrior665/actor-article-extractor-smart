@@ -54,15 +54,16 @@ Apify.main(async () => {
     });
 
     let extendOutputFunctionEvaled;
-    try {
-        extendOutputFunctionEvaled = eval(extendOutputFunction);
-    } catch (e) {
-        throw new Error(`extendOutputFunction is not a valid JavaScript! Error: ${e}`);
+    if (extendOutputFunction) {
+        try {
+            extendOutputFunctionEvaled = eval(extendOutputFunction);
+        } catch (e) {
+            throw new Error(`extendOutputFunction is not a valid JavaScript! Error: ${e}`);
+        }
+        if (typeof extendOutputFunctionEvaled !== 'function') {
+            throw new Error(`extendOutputFunction is not a function! Please fix it or use just default output!`);
+        }
     }
-    if (typeof extendOutputFunctionEvaled !== 'function') {
-        throw new Error(`extendOutputFunction is not a function! Please fix it or use just default output!`);
-    }
-
 
     // Valid format is either YYYY-MM-DD or format like "1 week" or "20 days"
     const parsedDateFrom = parseDateToMoment(dateFrom);

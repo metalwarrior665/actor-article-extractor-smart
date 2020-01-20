@@ -98,6 +98,27 @@
             "sectionCaption": "Extend Output Function",
             "sectionDescription": "This is only needed if the default output is not good enough for you. Be careful that you should provide valid JavaScript.",
             "editor": "javascript"
+        },
+        "stopAfterCUs": {
+            "title": "Stop after CUs",
+            "type": "integer",
+            "description": "Actor run will finish after reachin certain amount of Compute units."
+        },
+        "notificationEmails": {
+            "title": "Notification emails",
+            "type": "array",
+            "description": "Emails where should the bellow notifications should be sent.",
+            "editor": "stringList"
+        },
+        "notifyAfterCUs": {
+            "title": "Notify after CUs",
+            "type": "integer",
+            "description": "Actor will send notifications on provide email when it reaches provided CUs."
+        },
+        "notifyAfterCUsPeriodically": {
+            "title": "Notify every CUs (periodically)",
+            "type": "integer",
+            "description": "Actor will send notifications on provide email every provided CUs reached from last notification."
         }
     }
 }

@@ -6,6 +6,7 @@ const moment = require('moment');
 
 const { parseDateToMoment, loadAllDataset, executeExtendOutputFn, isDateValid, findDateInURL } = require('./utils.js');
 const { countWords, isUrlArticle, isInDateRange } = require('./article-recognition.js');
+const CUNotification = require('./compute-units-notification.js');
 
 const { log } = Apify.utils;
 
@@ -45,8 +46,30 @@ Apify.main(async () => {
         maxArticlesPerCrawl,
         proxyConfiguration = { useApifyProxy: true },
         debug = false,
+        maxConcurrency,
         extendOutputFunction,
+        stopAfterCUs,
+        notifyAfterCUs,
+        notificationEmails,
+        notifyAfterCUsPeriodically,
     } = input;
+
+    const defaultNotificationState = {
+        next: notifyAfterCUsPeriodically,
+    };
+
+    const notificationState = (await Apify.getValue('NOTIFICATION-STATE')) || defaultNotificationState;
+
+    // Measure CUs every 30 secs if enabled in input
+    if (stopAfterCUs || notifyAfterCUs || notifyAfterCUsPeriodically) {
+        if (Apify.isAtHome()) {
+            setInterval(async () => {
+                await CUNotification(stopAfterCUs, notifyAfterCUs, notificationEmails, notifyAfterCUsPeriodically, notificationState);
+            }, 30000);
+        } else {
+            console.log('Cannot measure Compute units of local run. Notifications disabled...');
+        }
+    }
 
     let articlesScraped = (await Apify.getValue('ARTICLES-SCRAPED')) || 0;
     Apify.events.on('migrating', async () => {
@@ -198,27 +221,6 @@ Apify.main(async () => {
         if (request.userData.label === 'ARTICLE') {
             const metadata = extractor(body);
 
-            console.log('Raw date:', metadata.date);
-
-            // We try native new Date() first and then Chrono
-            let parsedPageDate;
-            if (metadata.date) {
-                const nativeDate = new Date(metadata.date);
-                if (isDateValid(nativeDate)) {
-                    parsedPageDate = moment(nativeDate.toISOString());
-                } else {
-                    parsedPageDate = chrono.parseDate(metadata.date);
-                }
-            }
-
-            if (!parsedPageDate) {
-                parsedPageDate = findDateInURL(request.url);
-            }
-
-            metadata.date = parsedPageDate || null;
-
-            console.log('Parsed date:', metadata.date);
-
             const result = {
                 url: request.url,
                 loadedUrl,
@@ -230,6 +232,27 @@ Apify.main(async () => {
 
             const userResult = await executeExtendOutputFn(extendOutputFunctionEvaled, $);
             const completeResult = { ...result, ...userResult };
+
+            console.log('Raw date:', completeResult.date);
+
+            // We try native new Date() first and then Chrono
+            let parsedPageDate;
+            if (completeResult.date) {
+                const nativeDate = new Date(completeResult.date);
+                if (isDateValid(nativeDate)) {
+                    parsedPageDate = moment(nativeDate.toISOString());
+                } else {
+                    parsedPageDate = chrono.parseDate(completeResult.date);
+                }
+            }
+
+            if (!parsedPageDate) {
+                parsedPageDate = findDateInURL(request.url);
+            }
+
+            completeResult.date = parsedPageDate || null;
+
+            console.log('Parsed date:', metadata.date);
 
             const wordsCount = countWords(completeResult.text);
 
@@ -269,6 +292,7 @@ Apify.main(async () => {
     const crawler = new Apify.CheerioCrawler({
         requestQueue,
         handlePageFunction,
+        maxConcurrency,
         maxRequestRetries: 3,
         maxRequestsPerCrawl: maxPagesPerCrawl,
         useApifyProxy: proxyConfiguration.useApifyProxy,

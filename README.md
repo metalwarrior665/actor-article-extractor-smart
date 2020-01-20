@@ -15,3 +15,32 @@ Example output:
 - [CSV](https://api.apify.com/v2/datasets/mNg8AeuevQKjBhtTX/items?format=csv&attachment=1&clean=1)
 
 More detailed documentation to come...
+
+### Extend output function (optional)
+
+You can use this function to update the default output of this actor. This function gets a JQuery handle `$` as an argument so you can choose what data from the page you want to scrape. The output from this will function will get merged with the default output.
+
+The return value of this function has to be an object!
+
+You can return fields to achive 3 different things:
+- Add a new field - Return object with a field that is not in the default output
+- Change a field - Return an existing field with a new value
+- Remove a field - Return an existing field with a value `undefined`
+
+
+Let's say that you want to accomplish this
+- Remove `links` and `videos` fields from the output
+- Add a `pageTitle` field
+- Change the date selector (In rare cases the scraper is not able to find it)
+
+```javascript
+($) => {
+    return {
+        links: undefined,
+        videos: undefined,
+        pageTitle: $('title').text(),
+        date: $('.my-date-selector').text()
+    }
+}
+```
+

@@ -22,9 +22,11 @@ module.exports = async (stopAfterCUs, notifyAfterCUs, notificationEmails, notify
             await Apify.setValue('NOTIFICATION-STATE', notificationState);
         }
     }
-    if (notifyAfterCUs && CUs >= notifyAfterCUs) {
+    if (!notificationState.wasNotified && notifyAfterCUs && CUs >= notifyAfterCUs) {
         console.log(`Actor reached ${CUs} which is more than notifyAfterCUs: ${stopAfterCUs}. Sending notification email`);
         await sendMail(CUs, notifyAfterCUs, notificationEmails, actorRunId);
+        notificationState.wasNotified = true;
+        await Apify.setValue('NOTIFICATION-STATE', notificationState);
     }
     if (stopAfterCUs && CUs >= stopAfterCUs) {
         console.log(`Actor reached ${CUs} which is more than stopAfterCUs: ${stopAfterCUs}. Exiting actor.`);

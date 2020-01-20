@@ -56,6 +56,7 @@ Apify.main(async () => {
 
     const defaultNotificationState = {
         next: notifyAfterCUsPeriodically,
+        wasNotified: false,
     };
 
     const notificationState = (await Apify.getValue('NOTIFICATION-STATE')) || defaultNotificationState;

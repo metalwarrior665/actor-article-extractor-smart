@@ -82,6 +82,11 @@
             "type": "integer",
             "description": "Maximum number of valid articles scraped. The crawler will stop automatically after reaching this number."
         },
+        "maxConcurrency": {
+            "title": "Max concurrency",
+            "type": "integer",
+            "description": "You can limit the speed of the scraper. Don't forget to lower your memory too to save Compute units."
+        },
         "proxyConfiguration": {
             "title": "Proxy configuration",
             "type": "object",

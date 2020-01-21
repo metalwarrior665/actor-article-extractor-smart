@@ -107,7 +107,8 @@
         "stopAfterCUs": {
             "title": "Stop after CUs",
             "type": "integer",
-            "description": "Actor run will finish after reachin certain amount of Compute units."
+            "description": "Actor run will finish after reachin certain amount of Compute units.",
+            "sectionCaption": "Compute units & notifications"
         },
         "notificationEmails": {
             "title": "Notification emails",

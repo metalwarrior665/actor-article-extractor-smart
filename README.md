@@ -8,6 +8,7 @@ This actor is an extension of Apify's [Article Text Extractor](https://apify.com
 - Date normalization
 - Some extra data fields
 - Allows custom scraping function - You can add/overwrite your own fields from the parsed HTML
+- Allows using Google Bot headers (bypassing paywalls)
 
 Example output:
 - [JSON](https://api.apify.com/v2/datasets/mNg8AeuevQKjBhtTX/items?format=json&clean=1) (looks the best)

@@ -1,4 +1,5 @@
 const moment = require('moment');
+const urlLib = require('url');
 
 const isDateValid = (date) => {
     return date instanceof Date && !isNaN(date);
@@ -65,4 +66,17 @@ module.exports.findDateInURL = (url) => {
     if (match) {
         return match[0];
     }
+}
+
+module.exports.parseDomain = (url) => {
+    if (!url) return null;
+    const parsed = urlLib.parse(url);
+    if (parsed && parsed.host) {
+        return parsed.host.replace('www.', '');
+    }
+};
+
+module.exports.completeHref = (parentUrl, path) => {
+    const { protocol, host } = urlLib.parse(parentUrl);
+    return `${protocol}//${host}${path}`
 }

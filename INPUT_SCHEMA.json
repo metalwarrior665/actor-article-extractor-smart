@@ -26,6 +26,12 @@
             "type": "boolean",
             "description": "Saves full HTML of the article page but makes data less readable."
         },
+        "useGoogleBotHeaders": {
+            "title": "Use Google Bot headers",
+            "type": "boolean",
+            "description": "This option will allow you to bypass protection and/or paywall on some sites. Use with caution as it might get blocked.",
+            "default": false
+        },
         "minWords": {
             "title": "Minumum words",
             "type": "integer",

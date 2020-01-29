@@ -4,26 +4,10 @@ const chrono = require('chrono-node');
 const urlLib = require('url');
 const moment = require('moment');
 
-const { parseDateToMoment, loadAllDataset, executeExtendOutputFn, isDateValid, findDateInURL } = require('./utils.js');
+const { parseDateToMoment, loadAllDataset, executeExtendOutputFn, isDateValid, findDateInURL, parseDomain, completeHref } = require('./utils.js');
 const { countWords, isUrlArticle, isInDateRange } = require('./article-recognition.js');
 const CUNotification = require('./compute-units-notification.js');
-
-const { log } = Apify.utils;
-
-const MAX_DATASET_ITEMS_LOADED = 3 * 1000 * 1000;
-
-const parseDomain = (url) => {
-    if (!url) return null;
-    const parsed = urlLib.parse(url);
-    if (parsed && parsed.host) {
-        return parsed.host.replace('www.', '');
-    }
-};
-
-const completeHref = (parentUrl, path) => {
-    const { protocol, host } = urlLib.parse(parentUrl);
-    return `${protocol}//${host}${path}`
-}
+const { MAX_DATASET_ITEMS_LOADED, GOOGLE_BOT_HEADERS } = require('./constants.js');
 
 Apify.main(async () => {
     const input = await Apify.getValue('INPUT');
@@ -35,6 +19,7 @@ Apify.main(async () => {
         onlyNewArticles = false,
         onlyInsideArticles = true,
         saveHtml = false,
+        useGoogleBotHeaders = false,
         minWords = 150,
         dateFrom,
         isUrlArticleDefinition,
@@ -123,11 +108,17 @@ Apify.main(async () => {
     for (const request of startUrls) {
         const { url } = request;
         console.log(`enquing start URL: ${url}`);
-        if (request.userData && request.userData.label === 'ARTICLE') {
-            await requestQueue.addRequest({ url, userData: { label: 'ARTICLE', index: 0, depth: 0 } });
-        } else {
-            await requestQueue.addRequest({ url, userData: { label: 'CATEGORY', index: 0, depth: 0 } });
-        }
+
+        await requestQueue.addRequest({
+            url,
+            userData: {
+                label: request.userData && request.userData.label === 'ARTICLE' ? 'ARTICLE' : 'CATEGORY',
+                index: 0,
+                depth: 0,
+            },
+            headers: useGoogleBotHeaders ? GOOGLE_BOT_HEADERS : { 'User-Agent': Apify.utils.getRandomUserAgent() },
+        });
+
     }
 
     const handlePageFunction = async ({ request, $, body }) => {
@@ -186,7 +177,13 @@ Apify.main(async () => {
                 index++;
                 await requestQueue.addRequest({
                     url,
-                    userData: { domain: request.userData.domain, label: 'ARTICLE', index, loadedDomain },
+                    userData: {
+                        domain: request.userData.domain,
+                        label: 'ARTICLE',
+                        index,
+                        loadedDomain,
+                        headers: useGoogleBotHeaders ? GOOGLE_BOT_HEADERS : { 'User-Agent': Apify.utils.getRandomUserAgent() },
+                    },
                 });
             }
             if (debug) {

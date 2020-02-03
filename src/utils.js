@@ -29,7 +29,8 @@ module.exports.parseDateToMoment = (dateFrom) => {
     throw new Error('WRONG INPUT: dateFrom is not a valid date. Please use date in YYYY-MM-DD or format like "1 week" or "20 days"');
 };
 
-module.exports.loadAllDataset = async (dataset, items, offset) => {
+
+const loadAllDataset = async (dataset, items, offset) => {
     const limit = 250000;
     const newItems = await dataset.getData({ offset, limit }).then((res) => res.items);
     items = items.concat(newItems);
@@ -37,6 +38,7 @@ module.exports.loadAllDataset = async (dataset, items, offset) => {
     if (newItems.length === 0) return items;
     return loadAllDataset(dataset, items, offset + limit).catch((e) => items);
 };
+module.exports.loadAllDataset = loadAllDataset;
 
 module.exports.executeExtendOutputFn = async (fn, $) => {
     const isObject = (val) => typeof val === 'object' && val !== null && !Array.isArray(val);

@@ -5,9 +5,15 @@
     "schemaVersion": 1,
     "properties": {
         "startUrls": {
-            "title": "Start URLs",
+            "title": "Category URLs",
             "type": "array",
-            "description": "Can be main page URL or any category URLs. If you want direct article URLs, you have to add `{ \"label\": \"article\"}` to the userData`",
+            "description": "Can be main page URL or any category URLs. Article pages are found and enqueued from these. If you want direct article URLs, use `articleUrls` input instead",
+            "editor": "requestListSources"
+        },
+        "articleUrls": {
+            "title": "Article URLs",
+            "type": "array",
+            "description": "Direct URLs to the articles to be parsed. No extra pages are enqueued from article pages.",
             "editor": "requestListSources"
         },
         "onlyNewArticles": {

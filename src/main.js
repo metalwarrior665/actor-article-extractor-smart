@@ -15,7 +15,9 @@ Apify.main(async () => {
     console.dir(input);
 
     const {
+        // These are category URLs mostly
         startUrls,
+        articleUrls,
         onlyNewArticles = false,
         onlyInsideArticles = true,
         saveHtml = false,
@@ -107,11 +109,12 @@ Apify.main(async () => {
 
     for (const request of startUrls) {
         const { url } = request;
-        console.log(`enquing start URL: ${url}`);
+        console.log(`Enquing start URL: ${url}`);
 
         await requestQueue.addRequest({
             url,
             userData: {
+                // This is here for backwards compatibillity
                 label: request.userData && request.userData.label === 'ARTICLE' ? 'ARTICLE' : 'CATEGORY',
                 index: 0,
                 depth: 0,
@@ -119,6 +122,22 @@ Apify.main(async () => {
             headers: useGoogleBotHeaders ? GOOGLE_BOT_HEADERS : { 'User-Agent': Apify.utils.getRandomUserAgent() },
         });
 
+    }
+
+    let index = 0;
+    for (const request of articleUrls) {
+        const { url } = request;
+        console.log(`Enquing article URL: ${url}`);
+
+        await requestQueue.addRequest({
+            url,
+            userData: {
+                label: 'ARTICLE',
+                index: 0,
+            },
+            headers: useGoogleBotHeaders ? GOOGLE_BOT_HEADERS : { 'User-Agent': Apify.utils.getRandomUserAgent() },
+        });
+        index++;
     }
 
     const handlePageFunction = async ({ request, $, body }) => {

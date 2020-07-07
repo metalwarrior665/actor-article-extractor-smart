@@ -107,6 +107,25 @@
             "editor": "proxy",
             "sectionCaption": "Proxy configuration"
         },
+        "useBrowser": {
+            "title": "Use browser (Puppeteer)",
+            "type": "boolean",
+            "description": "Using browser is more expensive but gives you ability to evaluate JavaScript and wait for dynamically loaded data.",
+            "default": false,
+            "sectionCaption": "Browser options"
+        },
+        "pageWaitMs": {
+            "title": "Wait for on each page",
+            "type": "integer",
+            "description": "How long to wait on each page before extracting data",
+            "unit": "ms"
+        },
+        "pageWaitSelector": {
+            "title": "Wait for selector on each page",
+            "type": "string",
+            "description": "For what selector to wait on each page before extracting data",
+            "editor": "textfield"
+        },
         "extendOutputFunction": {
             "title": "Extend output function",
             "type": "string",

@@ -12,15 +12,15 @@ module.exports.parseDateToMoment = (dateFrom) => {
     }
 
     let parsedDateFrom = new Date(dateFrom);
-    console.log('Parsed new Date:', parsedDateFrom);
+    // console.log('Parsed new Date:', parsedDateFrom);
     if (isDateValid(parsedDateFrom)) {
-        console.log('returing')
+        // console.log('returing')
         return moment(parsedDateFrom);
     }
     const split = dateFrom.split(' ');
     const now = moment();
     parsedDateFrom = now.clone().subtract(Number(split[0]), split[1]);
-    console.log('Comparing:', now, parsedDateFrom);
+    // console.log('Comparing:', now, parsedDateFrom);
     if (now !== parsedDateFrom) {
         // Means the subtraction worked
         return parsedDateFrom;

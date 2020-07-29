@@ -16,7 +16,7 @@ Apify.main(async () => {
 
     const {
         // These are category URLs mostly
-        startUrls,
+        startUrls = [],
         articleUrls = [],
         onlyNewArticles = false,
         onlyInsideArticles = true,
@@ -110,7 +110,7 @@ Apify.main(async () => {
         console.log('state prepared');
     }
 
-    console.log(`We got ${startUrls.length} from the list`);
+    console.log(`We got ${startUrls.concat(articleUrls).length} start URLs`);
 
     const requestQueue = await Apify.openRequestQueue();
 

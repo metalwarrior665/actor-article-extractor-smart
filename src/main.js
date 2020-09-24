@@ -265,7 +265,7 @@ Apify.main(async () => {
         }
 
         if (request.userData.label === 'ARTICLE') {
-            const metadata = extractor(html );
+            const metadata = extractor(html);
 
             const result = {
                 url: request.url,
@@ -290,7 +290,7 @@ Apify.main(async () => {
                         } catch (e) {
                             return { error: e.toString()};
                         }
-                    }
+                    };
                     const { result, error } = await page.evaluate(evaluatePageFunction, pageFunctionString);
                     if (error) {
                         console.log(`extendOutputFunctionfailed. Returning default output. Error: ${error}`);
@@ -304,8 +304,6 @@ Apify.main(async () => {
 
             const completeResult = { ...result, ...userResult };
 
-            console.log('Raw date:', completeResult.date);
-
             // We try native new Date() first and then Chrono
             let parsedPageDate;
             if (completeResult.date) {
@@ -317,13 +315,12 @@ Apify.main(async () => {
                 }
             }
 
+            // Last fallback is on date in URL, then we give up
             if (!parsedPageDate) {
                 parsedPageDate = findDateInURL(request.url);
             }
 
             completeResult.date = parsedPageDate || null;
-
-            console.log('Parsed date:', metadata.date);
 
             const wordsCount = countWords(completeResult.text);
 
@@ -375,7 +372,7 @@ Apify.main(async () => {
         maxRequestRetries: 3,
         maxRequestsPerCrawl: maxPagesPerCrawl,
         proxyConfiguration: proxyConfigurationClass,
-    }
+    };
 
     const crawler = useBrowser
         ? new Apify.PuppeteerCrawler(genericCrawlerOptions)

@@ -16,8 +16,8 @@ module.exports = async (stopAfterCUs, notifyAfterCUs, notificationEmails, notify
     const CUs = stats.computeUnits;
     if (notifyAfterCUsPeriodically) {
         const { next } = notificationState;
-        console.log(`NOTIFICATIONS --- Actor reached ${CUs} which is more than notifyAfterCUsPeriodically: ${next}. Sending notification email`);
         if (CUs >= next) {
+            console.log(`NOTIFICATIONS --- Actor reached ${CUs} which is more than notifyAfterCUsPeriodically: ${next}. Sending notification email`);
             await sendMail(CUs, next, notificationEmails, actorRunId);
             notificationState.next += notifyAfterCUsPeriodically;
             await Apify.setValue('NOTIFICATION-STATE', notificationState);

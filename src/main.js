@@ -4,6 +4,8 @@ const chrono = require('chrono-node');
 const urlLib = require('url');
 const moment = require('moment');
 
+const { log } = Apify.utils;
+
 const { parseDateToMoment, loadAllDataset, executeExtendOutputFn, isDateValid, findDateInURL, parseDomain, completeHref } = require('./utils.js');
 const { countWords, isUrlArticle, isInDateRange } = require('./article-recognition.js');
 const CUNotification = require('./compute-units-notification.js');
@@ -11,7 +13,7 @@ const { MAX_DATASET_ITEMS_LOADED, GOOGLE_BOT_HEADERS } = require('./constants.js
 
 Apify.main(async () => {
     const input = await Apify.getValue('INPUT');
-    console.log('input');
+    log.info('Input');
     console.dir(input);
 
     const {
@@ -62,7 +64,7 @@ Apify.main(async () => {
                 await CUNotification(stopAfterCUs, notifyAfterCUs, notificationEmails, notifyAfterCUsPeriodically, notificationState);
             }, 30000);
         } else {
-            console.log('Cannot measure Compute units of local run. Notifications disabled...');
+            log.warning('Cannot measure Compute units of local run. Notifications disabled...');
         }
     }
 
@@ -89,34 +91,34 @@ Apify.main(async () => {
 
     const arePseudoUrls = pseudoUrls && pseudoUrls.length > 0;
     if ((arePseudoUrls && !linkSelector) || (linkSelector && !arePseudoUrls)) {
-        console.log('WARNING - If you use only Pseudo URLs or only Link selector, they will not work. You need to use them together.');
+        log.warning('WARNING - If you use only Pseudo URLs or only Link selector, they will not work. You need to use them together.');
     }
 
     // Only relevant for incremental run
     const state = {};
     let stateDataset;
     if (onlyNewArticles) {
-        console.log('loading state dataset...');
+        log.info('loading state dataset...');
         const datasetToOpen = 'articles-state';
         stateDataset = await Apify.openDataset(datasetToOpen);
         const { itemCount } = await stateDataset.getInfo();
         const rawOffset = itemCount - MAX_DATASET_ITEMS_LOADED;
         const offset = rawOffset < 0 ? 0 : rawOffset;
-        console.log(`State dataset contains ${itemCount} items, max dataset load is ${MAX_DATASET_ITEMS_LOADED}, offset: ${offset}`);
+        log.info(`State dataset contains ${itemCount} items, max dataset load is ${MAX_DATASET_ITEMS_LOADED}, offset: ${offset}`);
         const stateData = await loadAllDataset(stateDataset, [], offset);
         stateData.forEach((item) => {
             state[item.url] = true;
         });
-        console.log('state prepared');
+        log.info('state prepared');
     }
 
-    console.log(`We got ${startUrls.concat(articleUrls).length} start URLs`);
+    log.info(`We got ${startUrls.concat(articleUrls).length} start URLs`);
 
     const requestQueue = await Apify.openRequestQueue();
 
     for (const request of startUrls) {
         const { url } = request;
-        console.log(`Enquing start URL: ${url}`);
+        log.info(`Enquing start URL: ${url}`);
 
         await requestQueue.addRequest({
             url,
@@ -134,7 +136,7 @@ Apify.main(async () => {
     let index = 0;
     for (const request of articleUrls) {
         const { url } = request;
-        console.log(`Enquing article URL: ${url}`);
+        log.info(`Enquing article URL: ${url}`);
 
         await requestQueue.addRequest({
             url,
@@ -172,10 +174,10 @@ Apify.main(async () => {
 
         if (request.userData.label !== 'ARTICLE') {
             const loadedDomain = parseDomain(loadedUrl);
-            console.log(`CATEGORY PAGE - requested URL: ${request.url}, loaded URL: ${loadedUrl}`);
+            log.info(`CATEGORY PAGE - requested URL: ${request.url}, loaded URL: ${loadedUrl}`);
 
             if (request.userData.depth >= maxDepth) {
-                console.log(`Max depth of ${maxDepth} reached, not enqueueing any more request for --- ${request.url}`);
+                log.warning(`Max depth of ${maxDepth} reached, not enqueueing any more request for --- ${request.url}`);
                 return;
             }
 
@@ -194,26 +196,26 @@ Apify.main(async () => {
                     }
                 });
             }
-            console.log(`total number of a tags: ${aTagsCount}`);
-            console.log(`total number of links: ${allHrefs.length}`);
+            log.info(`total number of a tags: ${aTagsCount}`);
+            log.info(`total number of links: ${allHrefs.length}`);
 
             let links = allHrefs;
 
             // filtered only inside links
             if (onlyInsideArticles) {
                 links = allHrefs.filter((link) => loadedDomain === parseDomain(link));
-                console.log(`number of inside links: ${links.length}`);
+                log.info(`number of inside links: ${links.length}`);
             }
 
             // filtered only new urls
             if (onlyNewArticles) {
                 links = links.filter((href) => !state[href]);
-                console.log(`number of inside links after state filter: ${links.length}`);
+                log.info(`number of inside links after state filter: ${links.length}`);
             }
 
             // filtered only proper article urls
             const articleUrlHrefs = links.filter((link) => isUrlArticle(link, isUrlArticleDefinition));
-            console.log(`number of article url links: ${articleUrlHrefs.length}`);
+            log.info(`number of article url links: ${articleUrlHrefs.length}`);
 
             let index = 0;
             for (const url of articleUrlHrefs) {
@@ -260,7 +262,7 @@ Apify.main(async () => {
                         }
                     }
                 }
-                console.log(`Link selector found ${selectedLinks.length} links, enqueued through PURLs: ${enqueued} --- ${request.url}`);
+                log.info(`Link selector found ${selectedLinks.length} links, enqueued through PURLs: ${enqueued} --- ${request.url}`);
             }
         }
 
@@ -282,23 +284,23 @@ Apify.main(async () => {
                     await Apify.utils.puppeteer.injectJQuery(page);
                     const pageFunctionString = extendOutputFunction.toString();
 
-                    const evaluatePageFunction = async (fnString) => {
+                    const evaluatePageFunction = async (fnString, item) => {
                         const fn = eval(fnString);
                         try {
-                            const result = await fn($);
-                            return { result };
+                            const userResult = await fn($, item);
+                            return { userResult };
                         } catch (e) {
                             return { error: e.toString()};
                         }
                     };
-                    const { result, error } = await page.evaluate(evaluatePageFunction, pageFunctionString);
-                    if (error) {
-                        console.log(`extendOutputFunctionfailed. Returning default output. Error: ${error}`);
+                    const resultOrError = await page.evaluate(evaluatePageFunction, pageFunctionString, result);
+                    if (resultOrError.error) {
+                        log.warning(`extendOutputFunctionfailed. Returning default output. Error: ${resultOrError.error}`);
                     } else {
-                        userResult = result;
+                        userResult = resultOrError.userResult;
                     }
                 } else {
-                    userResult = await executeExtendOutputFn(extendOutputFunctionEvaled, $);
+                    userResult = await executeExtendOutputFn(extendOutputFunctionEvaled, $, result);
                 }
             }
 
@@ -326,7 +328,7 @@ Apify.main(async () => {
 
             const isInDateRangeVar = isInDateRange(completeResult.date, parsedDateFrom);
             if (mustHaveDate && !isInDateRangeVar && !!completeResult.date) {
-                console.log(`ARTICLE - ${request.userData.index} - DATE NOT IN RANGE: ${completeResult.date}`);
+                log.warning(`ARTICLE - ${request.userData.index} - DATE NOT IN RANGE: ${completeResult.date}`);
                 return;
             }
 
@@ -343,16 +345,16 @@ Apify.main(async () => {
                 && wordsCount > minWords;
 
             if (isArticle) {
-                console.log(`IS VALID ARTICLE --- ${request.url}`);
+                log.info(`IS VALID ARTICLE --- ${request.url}`);
                 await Apify.pushData(completeResult);
                 articlesScraped++;
 
                 if (maxArticlesPerCrawl && articlesScraped >= maxArticlesPerCrawl) {
-                    console.log(`WE HAVE REACHED MAXIMUM ARTICLES: ${maxArticlesPerCrawl}. FINISHING CRAWLING...`);
+                    log.warning(`WE HAVE REACHED MAXIMUM ARTICLES: ${maxArticlesPerCrawl}. FINISHING CRAWLING...`);
                     process.exit(0);
                 }
             } else {
-                console.log(`IS NOT VALID ARTICLE --- date: ${hasValidDate}, title: ${!!completeResult.title}, words: ${wordsCount}, dateRange: ${isInDateRangeVar} --- ${request.url}`);
+                log.warning(`IS NOT VALID ARTICLE --- date: ${hasValidDate}, title: ${!!completeResult.title}, words: ${wordsCount}, dateRange: ${isInDateRangeVar} --- ${request.url}`);
             }
         }
     };
@@ -372,13 +374,14 @@ Apify.main(async () => {
         maxRequestRetries: 3,
         maxRequestsPerCrawl: maxPagesPerCrawl,
         proxyConfiguration: proxyConfigurationClass,
+        gotoTimeoutSecs: useBrowser ? 120 : undefined,
     };
 
     const crawler = useBrowser
         ? new Apify.PuppeteerCrawler(genericCrawlerOptions)
         : new Apify.CheerioCrawler(genericCrawlerOptions);
 
-    console.log('starting crawler...');
+    log.info('starting crawler...');
     await crawler.run();
-    console.log('crawler finished...');
+    log.info('crawler finished...');
 });

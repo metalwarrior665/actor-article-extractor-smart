@@ -375,6 +375,7 @@ Apify.main(async () => {
         maxRequestsPerCrawl: maxPagesPerCrawl,
         proxyConfiguration: proxyConfigurationClass,
         gotoTimeoutSecs: useBrowser ? 120 : undefined,
+        requestTimeoutSecs: useBrowser ? undefined : 120,
     };
 
     const crawler = useBrowser

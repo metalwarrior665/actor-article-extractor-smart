@@ -1,7 +1,8 @@
 #### 2020-09-28
-- Upgraded Apify version `0.21.0` that sometimes crashed at the start of run
+- Upgraded Apify version `0.21.0` that sometimes crashed at the start of the run
 - Added `currentItem` param to `extendOutputFunction`
 - Improved logs
+- Increased request timeouts to work better on very slow sites
 
 #### 2020-07-07
 - Added option to run with browser (Puppeteer)

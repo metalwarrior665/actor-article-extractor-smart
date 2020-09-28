@@ -58,7 +58,7 @@ Smart article extractor can be run as an [Apify Actor](https://apify.com/actors)
 More detailed documentation to come...
 
 ### Changelog
-This actor is under active development. For more detailed information on recent updates, check [Changelog](CHANGELOG.md)
+This actor is under active development. For more detailed information on recent updates, check [Changelog](https://github.com/metalwarrior665/actor-article-extractor-smart/blob/master/CHANGELOG.md)
 
 ### Extend output function (optional)
 

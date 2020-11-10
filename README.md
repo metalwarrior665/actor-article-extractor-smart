@@ -7,7 +7,7 @@ Smart article extractor scrapes news, scientific or other articles from any webs
 - [Publishing article content](#publishing-article-content)
 - [How to run](#how-to-run)
 - [Changelog](#changelog)
-- [Extend output function](#extend-output-function-(optional))
+- [Extend output function](#extend-output-function)
 
 ### Features
 This actor is an extension of Apify's [Article Text Extractor](https://apify.com/mtrunkat/article-text-extractor) which extract rich information from a single article page. It has several extra features:
@@ -60,9 +60,9 @@ More detailed documentation to come...
 ### Changelog
 This actor is under active development. For more detailed information on recent updates, check [Changelog](https://github.com/metalwarrior665/actor-article-extractor-smart/blob/master/CHANGELOG.md)
 
-### Extend output function (optional)
+### Extend output function
 
-You can use this function to update the default output of this actor. This function gets a JQuery handle `$` as an argument so you can choose what data from the page you want to scrape. It also receives the `currentItem` parameter which is the default output parsed by the scraper so you can explore any fields. The output from this will function will get merged with the default output.
+You can use this optional function to update the default output of this actor. This function gets a JQuery handle `$` as an argument so you can choose what data from the page you want to scrape. It also receives the `currentItem` parameter which is the default output parsed by the scraper so you can explore any fields. The output from this will function will get merged with the default output.
 
 The return value of this function has to be an object!
 

@@ -1,3 +1,6 @@
+#### 2021-01-21
+- Fix: Now works with Start URLs from a public spreadsheet
+
 #### 2020-09-28
 - Upgraded Apify version `0.21.0` that sometimes crashed at the start of the run
 - Added `currentItem` param to `extendOutputFunction`

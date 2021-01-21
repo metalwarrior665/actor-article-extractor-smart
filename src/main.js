@@ -114,14 +114,14 @@ Apify.main(async () => {
 
     log.info(`We got ${startUrls.concat(articleUrls).length} start URLs`);
 
-    const requestQueue = await Apify.openRequestQueue();
+    const sources = [];
 
     for (const request of startUrls) {
-        const { url } = request;
-        log.info(`Enquing start URL: ${url}`);
+        const { url, requestsFromUrl } = request;
+        log.info(`Adding start URL: ${url || requestsFromUrl}`);
 
-        await requestQueue.addRequest({
-            url,
+        sources.push({
+            ...request,
             userData: {
                 // This is here for backwards compatibillity
                 label: request.userData && request.userData.label === 'ARTICLE' ? 'ARTICLE' : 'CATEGORY',
@@ -130,24 +130,24 @@ Apify.main(async () => {
             },
             headers: useGoogleBotHeaders ? GOOGLE_BOT_HEADERS : undefined,
         });
-
     }
 
-    let index = 0;
     for (const request of articleUrls) {
-        const { url } = request;
-        log.info(`Enquing article URL: ${url}`);
+        const { url, requestsFromUrl } = request;
+        log.info(`Adding article URL: ${url || requestsFromUrl}`);
 
-        await requestQueue.addRequest({
-            url,
+        sources.push({
+            ...request,
             userData: {
                 label: 'ARTICLE',
                 index: 0,
             },
             headers: useGoogleBotHeaders ? GOOGLE_BOT_HEADERS : undefined,
         });
-        index++;
     }
+
+    const requestQueue = await Apify.openRequestQueue();
+    const requestList = await Apify.openRequestList('LIST', sources);
 
     // This can be Cheerio or Puppeteer page so we have to differentiate that often
     // That's why there will be often "if (page) {...}"
@@ -368,6 +368,7 @@ Apify.main(async () => {
     }
 
     const genericCrawlerOptions = {
+        requestList,
         requestQueue,
         handlePageFunction,
         maxConcurrency,

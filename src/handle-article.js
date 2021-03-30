@@ -40,8 +40,10 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
     }
 
     if (onlyNewArticles) {
-        state[completeResult.url] = true;
-        await stateDataset.pushData({ url: request.url });
+        if (!state.overallArticlesScraped.has(completeResult.url)) {
+            state.overallArticlesScraped.add(completeResult.url);
+            await stateDataset.pushData({ url: request.url });
+        }
     }
 
     const hasValidDate = mustHaveDate ? isInDateRangeVar : true;
@@ -64,4 +66,4 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
         log.warning(`IS NOT VALID ARTICLE --- date: ${hasValidDate}, `
             + `title: ${!!completeResult.title}, words: ${wordsCount}, dateRange: ${isInDateRangeVar} --- ${request.url}`);
     }
-}
+};

@@ -59,7 +59,7 @@ module.exports = async ({
 
     // filtered only new urls
     if (onlyNewArticles) {
-        links = links.filter((href) => !state[href]);
+        links = links.filter((href) => !state.overallArticlesScraped.has(href));
         log.info(`number of inside links after state filter: ${links.length}`);
     }
 

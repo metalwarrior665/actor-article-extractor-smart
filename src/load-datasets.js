@@ -42,13 +42,16 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
         limit = 999999999,
         concatItems = true,
         concatDatasets = true,
-        fields,
         debugLog = false,
         persistLoadingStateForProcesFn = false,
+        fields,
     } = options;
 
+    if (!Apify.isAtHome && fields) {
+        log.warning('loadDatasetItemsInParallel - fields option does not work on local datasets');
+    }
+
     const loadStart = Date.now();
-    const client = Apify.newClient();
 
     // Returns either null if offset/limit does not fit the current chunk
     // or { offset, limit } object
@@ -104,11 +107,12 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
                 processFnLoadingState[datasetId] = {};
             }
             // We get the number of items first and then we precreate request info objects
-            const { cleanItemCount } = await client.dataset(datasetId).get();
+            const dataset = await Apify.openDataset(datasetId);
+            const { itemCount } = await dataset.getInfo();
             if (debugLog) {
-                log.info(`Dataset ${datasetId} has ${cleanItemCount} items`);
+                log.info(`Dataset ${datasetId} has ${itemCount} items`);
             }
-            const numberOfBatches = Math.ceil(cleanItemCount / batchSize);
+            const numberOfBatches = Math.ceil(itemCount / batchSize);
 
             for (let i = 0; i < numberOfBatches; i++) {
                 const localOffsetLimit = calculateLocalOffsetLimit({ offset, limit, localStart: i * batchSize, batchSize });
@@ -165,11 +169,18 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
     //  Now we execute all the requests in parallel (with defined concurrency)
     await bluebird.map(requestInfoArr, async (requestInfoObj) => {
         const { index, datasetId, datasetIndex } = requestInfoObj;
-        const { items } = await client.dataset(datasetId).listItems({
+
+        // This open should be cached
+        const dataset = await Apify.openDataset(datasetId);
+        const getDataOptions = {
             offset: requestInfoObj.offset,
             limit: requestInfoObj.limit,
             fields,
-        });
+        };
+        if (!Apify.isAtHome) {
+            delete getDataOptions.fields;
+        }
+        const { items } = await dataset.getData();
 
         if (!totalLoadedPerDataset[datasetId]) {
             totalLoadedPerDataset[datasetId] = 0;

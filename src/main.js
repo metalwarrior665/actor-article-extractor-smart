@@ -83,12 +83,13 @@ Apify.main(async () => {
         const rawOffset = itemCount - MAX_DATASET_ITEMS_LOADED;
         const offset = rawOffset < 0 ? 0 : rawOffset;
         log.info(`State dataset contains ${itemCount} items, max dataset load is ${MAX_DATASET_ITEMS_LOADED}, offset: ${offset}`);
-        const overallArticleUrls = await loadDatasetItemsInParallel([id], { offset })
-            .then((item) => item.url);
+        const overallArticleUrls = await loadDatasetItemsInParallel([id || datasetToOpen], { offset, debugLog: true })
+            .then((items) => items.map((item) => item.url));
+        log.info(`${overallArticleUrls.length} article URLs loaded from state dataset`);
         overallArticleUrls.forEach((url) => {
             state.overallArticlesScraped.add(url);
         });
-        log.info('state prepared');
+        log.info(`Loaded ${state.overallArticlesScraped.size} unique article URLs that were already scraded to be skipped this scrape`);
     }
     if (onlyNewArticlesPerDomain) {
 

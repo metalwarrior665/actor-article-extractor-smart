@@ -2,10 +2,11 @@ const Apify = require('apify');
 
 const { log } = Apify.utils;
 
-const { parseDateToMoment, loadAllDataset, evalPageFunction } = require('./utils.js');
+const { parseDateToMoment, evalPageFunction } = require('./utils.js');
 const { setupNotifications } = require('./compute-units-notification.js');
 const { MAX_DATASET_ITEMS_LOADED } = require('./constants.js');
 const getStartSources = require('./start-urls');
+const { loadDatasetItemsInParallel } = require('./load-datasets');
 
 const handleCategory = require('./handle-category');
 const handleArticle = require('./handle-article');
@@ -50,15 +51,6 @@ Apify.main(async () => {
         notifyAfterCUsPeriodically,
     } = input;
 
-    await setupNotifications({ stopAfterCUs, notifyAfterCUs, notificationEmails, notifyAfterCUsPeriodically });
-
-    const articlesScraped = (await Apify.getValue('ARTICLES-SCRAPED')) || { scraped: 0 };
-    Apify.events.on('migrating', async () => {
-        await Apify.setValue('ARTICLES-SCRAPED', articlesScraped);
-    });
-
-    const extendOutputFunctionEvaled = evalPageFunction(extendOutputFunction);
-
     // Valid format is either YYYY-MM-DD or format like "1 week" or "20 days"
     const parsedDateFrom = parseDateToMoment(dateFrom);
 
@@ -67,22 +59,39 @@ Apify.main(async () => {
         log.warning('WARNING - If you use only Pseudo URLs or only Link selector, they will not work. You need to use them together.');
     }
 
-    // Only relevant for incremental run
-    const state = {};
+    const extendOutputFunctionEvaled = evalPageFunction(extendOutputFunction);
+
+    await setupNotifications({ stopAfterCUs, notifyAfterCUs, notificationEmails, notifyAfterCUsPeriodically });
+
+    const dataset = await Apify.openDataset();
+    const { itemCount } = await dataset.getInfo();
+
+    const state = {
+        articlesScrapedThisRun: itemCount,
+        overallArticlesScraped: new Set(),
+        perDomainArticlesScraped: {},
+    };
+
+    // In reality, it makes more sense to use the per domain state to keep datasets small
+    // But we have to keep the overall one for backwards compat
     let stateDataset;
     if (onlyNewArticles) {
         log.info('loading state dataset...');
         const datasetToOpen = 'articles-state';
         stateDataset = await Apify.openDataset(datasetToOpen);
-        const { itemCount } = await stateDataset.getInfo();
+        const { itemCount, id } = await stateDataset.getInfo();
         const rawOffset = itemCount - MAX_DATASET_ITEMS_LOADED;
         const offset = rawOffset < 0 ? 0 : rawOffset;
         log.info(`State dataset contains ${itemCount} items, max dataset load is ${MAX_DATASET_ITEMS_LOADED}, offset: ${offset}`);
-        const stateData = await loadAllDataset(stateDataset, [], offset);
-        stateData.forEach((item) => {
-            state[item.url] = true;
+        const overallArticleUrls = await loadDatasetItemsInParallel([id], { offset })
+            .then((item) => item.url);
+        overallArticleUrls.forEach((url) => {
+            state.overallArticlesScraped.add(url);
         });
         log.info('state prepared');
+    }
+    if (onlyNewArticlesPerDomain) {
+
     }
 
     log.info(`We got ${startUrls.concat(articleUrls).length} start URLs`);
@@ -123,7 +132,7 @@ Apify.main(async () => {
         if (request.userData.label === 'ARTICLE') {
             await handleArticle({ request, saveHtml, html, page, $, extendOutputFunction,
                 extendOutputFunctionEvaled, parsedDateFrom, mustHaveDate, minWords,
-                maxArticlesPerCrawl, articlesScraped, onlyNewArticles, state,
+                maxArticlesPerCrawl, onlyNewArticles, state,
                 stateDataset });
         }
     };

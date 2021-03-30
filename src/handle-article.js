@@ -8,7 +8,7 @@ const { log } = Apify.utils;
 
 module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction,
     extendOutputFunctionEvaled, parsedDateFrom, mustHaveDate, minWords,
-    maxArticlesPerCrawl, articlesScraped, onlyNewArticles, state, stateDataset }) => {
+    maxArticlesPerCrawl, onlyNewArticles, state, stateDataset }) => {
     const metadata = extractor(html);
 
     const result = {
@@ -54,9 +54,9 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
     if (isArticle) {
         log.info(`IS VALID ARTICLE --- ${request.url}`);
         await Apify.pushData(completeResult);
-        articlesScraped.scraped++;
+        state.articlesScrapedThisRun++;
 
-        if (maxArticlesPerCrawl && articlesScraped.scraped >= maxArticlesPerCrawl) {
+        if (maxArticlesPerCrawl && state.articlesScrapedThisRun >= maxArticlesPerCrawl) {
             log.warning(`WE HAVE REACHED MAXIMUM ARTICLES: ${maxArticlesPerCrawl}. FINISHING CRAWLING...`);
             process.exit(0);
         }

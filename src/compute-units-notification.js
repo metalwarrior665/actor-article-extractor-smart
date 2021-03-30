@@ -11,7 +11,7 @@ const sendMail = async (CUs, limit, notificationEmails, runId) => {
     await Apify.call('apify/send-mail', actorInput, { waitSecs: 0 });
 };
 
-module.exports = async (stopAfterCUs, notifyAfterCUs, notificationEmails, notifyAfterCUsPeriodically, notificationState) => {
+const CUNotification = async (stopAfterCUs, notifyAfterCUs, notificationEmails, notifyAfterCUsPeriodically, notificationState) => {
     log.info('NOTIFICATIONS --- Checking if to send notifications...');
     const { actorId, actorRunId } = Apify.getEnv();
     const { stats } = await Apify.client.acts.getRun({ actId: actorId, runId: actorRunId });
@@ -34,5 +34,32 @@ module.exports = async (stopAfterCUs, notifyAfterCUs, notificationEmails, notify
     if (stopAfterCUs && CUs >= stopAfterCUs) {
         log.warning(`NOTIFICATIONS --- Actor reached ${CUs} which is more than stopAfterCUs: ${stopAfterCUs}. Exiting actor.`);
         process.exit(0);
+    }
+};
+
+// Special functionality for J.S.
+module.exports.setupNotifications = async ({
+    notifyAfterCUsPeriodically,
+    stopAfterCUs,
+    notifyAfterCUs,
+    notificationEmails,
+}) => {
+    const defaultNotificationState = {
+        next: notifyAfterCUsPeriodically,
+        wasNotified: false,
+    };
+
+    const notificationState = (await Apify.getValue('NOTIFICATION-STATE'))
+        || defaultNotificationState;
+
+    // Measure CUs every 30 secs if enabled in input
+    if (stopAfterCUs || notifyAfterCUs || notifyAfterCUsPeriodically) {
+        if (Apify.isAtHome()) {
+            setInterval(async () => {
+                await CUNotification(stopAfterCUs, notifyAfterCUs, notificationEmails, notifyAfterCUsPeriodically, notificationState);
+            }, 30000);
+        } else {
+            log.warning('Cannot measure Compute units of local run. Notifications disabled...');
+        }
     }
 };

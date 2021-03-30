@@ -4,12 +4,16 @@
 	"description": "This is a boilerplate of an Apify actor.",
 	"dependencies": {
 		"@types/moment": "^2.13.0",
-		"apify": "^0.21.4",
+		"apify": "^1.1",
+		"puppeteer": "*",
 		"chrono-node": "^1.3.11",
 		"moment": "^2.24.0",
 		"unfluff": "^3.2.0"
 	},
-	"devDependencies": {},
+	"devDependencies": {
+		"@apify/eslint-config": "^0.1.3",
+		"eslint": "^7.23.0"
+	},
 	"scripts": {
 		"start": "node src/main.js",
 		"test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"

@@ -1,6 +1,7 @@
 const moment = require('moment');
 const urlLib = require('url');
 const Apify = require('apify');
+const chrono = require('chrono-node');
 
 const { log } = Apify.utils;
 
@@ -42,7 +43,61 @@ const loadAllDataset = async (dataset, items, offset) => {
 };
 module.exports.loadAllDataset = loadAllDataset;
 
-module.exports.executeExtendOutputFn = async (fn, $, item) => {
+const findDateInURL = (url) => {
+    const match = url.match(/\d{4}-\d{2}-\d{2}/);
+    if (match) {
+        return match[0];
+    }
+};
+module.exports.findDateInURL = findDateInURL;
+
+module.exports.parseDomain = (url) => {
+    if (!url) return null;
+    const parsed = urlLib.parse(url);
+    if (parsed && parsed.host) {
+        return parsed.host.replace('www.', '');
+    }
+};
+
+module.exports.completeHref = (parentUrl, path) => {
+    const { protocol, host } = urlLib.parse(parentUrl);
+    return `${protocol}//${host}${path}`;
+};
+
+module.exports.parseDateFromPage = (result, url) => {
+    // We try native new Date() first and then Chrono
+    let parsedPageDate;
+    if (result.date) {
+        const nativeDate = new Date(result.date);
+        if (isDateValid(nativeDate)) {
+            parsedPageDate = moment(nativeDate.toISOString());
+        } else {
+            parsedPageDate = chrono.parseDate(result.date);
+        }
+    }
+
+    // Last fallback is on date in URL, then we give up
+    if (!parsedPageDate) {
+        parsedPageDate = findDateInURL(url);
+    }
+};
+
+module.exports.evalPageFunction = (extendOutputFunction) => {
+    let extendOutputFunctionEvaled;
+    if (extendOutputFunction) {
+        try {
+            extendOutputFunctionEvaled = eval(extendOutputFunction);
+        } catch (e) {
+            throw new Error(`extendOutputFunction is not a valid JavaScript! Error: ${e}`);
+        }
+        if (typeof extendOutputFunctionEvaled !== 'function') {
+            throw new Error(`extendOutputFunction is not a function! Please fix it or use just default output!`);
+        }
+    }
+    return extendOutputFunctionEvaled;
+};
+
+const executeExtendOutputFnCheerio = async (fn, $, item) => {
     const isObject = (val) => typeof val === 'object' && val !== null && !Array.isArray(val);
 
     let userResult = {};
@@ -65,22 +120,27 @@ module.exports.executeExtendOutputFn = async (fn, $, item) => {
     return userResult;
 };
 
-module.exports.findDateInURL = (url) => {
-    const match = url.match(/\d{4}-\d{2}-\d{2}/);
-    if (match) {
-        return match[0];
-    }
-};
+module.exports.executeExtendOutputFn = async ({ page, $, extendOutputFunction, extendOutputFunctionEvaled, item }) => {
+    if (page) {
+        await Apify.utils.puppeteer.injectJQuery(page);
+        const pageFunctionString = extendOutputFunction.toString();
 
-module.exports.parseDomain = (url) => {
-    if (!url) return null;
-    const parsed = urlLib.parse(url);
-    if (parsed && parsed.host) {
-        return parsed.host.replace('www.', '');
+        const evaluatePageFunction = async (fnString, item) => {
+            const fn = eval(fnString);
+            try {
+                const userResult = await fn($, item);
+                return { userResult };
+            } catch (e) {
+                return { error: e.toString() };
+            }
+        };
+        const resultOrError = await page.evaluate(evaluatePageFunction, pageFunctionString, item);
+        if (resultOrError.error) {
+            log.warning(`extendOutputFunctionfailed. Returning default output. Error: ${resultOrError.error}`);
+        } else {
+            return resultOrError.userResult;
+        }
+    } else {
+        return executeExtendOutputFnCheerio(extendOutputFunctionEvaled, $, item);
     }
-};
-
-module.exports.completeHref = (parentUrl, path) => {
-    const { protocol, host } = urlLib.parse(parentUrl);
-    return `${protocol}//${host}${path}`;
 };

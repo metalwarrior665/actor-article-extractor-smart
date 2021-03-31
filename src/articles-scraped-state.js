@@ -42,7 +42,7 @@ module.exports.wasArticleScraped = async (state, url) => {
     const urlObj = new URL(url);
     const { hostname, pathname, search, hash } = urlObj;
 
-    const sanitizedDomain = hostname.replace(/[^a-zA-Z0-9.-_]/g, '-');
+    const sanitizedDomain = hostname.replace(/[^a-zA-Z0-9-]/g, '-');
 
     // If this domain is requested for the first time
     // We have to load it from dataset
@@ -87,7 +87,7 @@ module.exports.addArticleScraped = async (state, url) => {
         const urlObj = new URL(url);
         const { hostname, pathname, search, hash } = urlObj;
 
-        const sanitizedDomain = hostname.replace(/[^a-zA-Z0-9.-_]/g, '-');
+        const sanitizedDomain = hostname.replace(/[^a-zA-Z0-9-]/g, '-');
 
         const articlePath = `${pathname}${search}${hash}`;
         state.perDomainArticlesScraped[sanitizedDomain].articlePathsSet.add(articlePath);

@@ -33,29 +33,33 @@ module.exports = async ({
     }
 
     // all links
-    let allHrefs = [];
-    let aTagsCount = 0;
+    let allATagHrefs = [];
     if (page) {
-        allHrefs = await page.$$eval('a', (els) => els.map((el) => el.href));
+        allATagHrefs = await page.$$eval('a', (els) => els.map((el) => el.href));
     } else {
         $('a').each(function () {
-            aTagsCount++;
-            const relativeOrAbsoluteLink = $(this).attr('href');
-            if (relativeOrAbsoluteLink) {
-                const urlObj = new URL(relativeOrAbsoluteLink, request.loadedUrl);
-                const absoluteLink = urlObj.href;
-                allHrefs.push(absoluteLink);
-            }
+            allATagHrefs.push($(this).attr('href'));
         });
     }
-    log.info(`total number of a tags: ${aTagsCount}`);
-    log.info(`total number of links: ${allHrefs.length}`);
 
-    let links = allHrefs;
+    log.info(`total number of all a tags: ${allATagHrefs.length}`);
+
+    // Valid URLs only
+    let links = [];
+
+    for (const maybeHref of allATagHrefs) {
+        // This can fail if maybeHref is not a valid URL or path
+        try {
+            const urlObj = new URL(maybeHref, request.loadedUrl);
+            const absoluteLink = urlObj.href;
+            links.push(absoluteLink);
+        } catch (e) {}
+    }
+    log.info(`total number of valid links: ${links.length}`);
 
     // filtered only inside links
     if (onlyInsideArticles) {
-        links = allHrefs.filter((link) => loadedDomain === parseDomain(link));
+        links = links.filter((link) => loadedDomain === parseDomain(link));
         log.info(`number of inside links: ${links.length}`);
     }
 

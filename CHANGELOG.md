@@ -1,3 +1,7 @@
+#### 2021-03-31
+*Features*
+- Added new input option `onlyNewArticlesPerDomain`. This is much more efficient way to deduplicate articles, so use it instead of `onlyNewArticles`.
+
 #### 2021-01-21
 - Fix: Now works with Start URLs from a public spreadsheet
 

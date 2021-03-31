@@ -17,9 +17,16 @@
             "editor": "requestListSources"
         },
         "onlyNewArticles": {
-            "title": "Only new articles",
+            "title": "Only new articles (only for small runs)",
             "type": "boolean",
-            "description": "If true, will scrape only new articles each you run it. All URLs you scraped are saved in dataset called `articles-state` and are compared with new ones."
+            "default": false,
+            "description": "This option is only viable for smaller runs. If you plan to use this at large scale, use `onlyNewArticlesPerDomain` instead. If true, will scrape only new articles each you run it. All URLs you scraped are saved in dataset called `articles-state` and are compared with new ones."
+        },
+        "onlyNewArticlesPerDomain": {
+            "title": "Only new articles (saved per domain, preferable)",
+            "type": "boolean",
+            "default": false,
+            "description": "If true, will scrape only new articles each you run it. All URLs you scraped ar and are compared with new ones. Scraped articles are saved in one dataset per each domain, datasets are named 'ARTICLES-SCRAPED-domain'"
         },
         "onlyInsideArticles": {
             "title": "Only inside domain articles",

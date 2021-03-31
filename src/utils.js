@@ -1,5 +1,4 @@
 const moment = require('moment');
-const urlLib = require('url');
 const Apify = require('apify');
 const chrono = require('chrono-node');
 
@@ -53,15 +52,10 @@ module.exports.findDateInURL = findDateInURL;
 
 module.exports.parseDomain = (url) => {
     if (!url) return null;
-    const parsed = urlLib.parse(url);
+    const parsed = new URL(url);
     if (parsed && parsed.host) {
         return parsed.host.replace('www.', '');
     }
-};
-
-module.exports.completeHref = (parentUrl, path) => {
-    const { protocol, host } = urlLib.parse(parentUrl);
-    return `${protocol}//${host}${path}`;
 };
 
 module.exports.parseDateFromPage = (result, url) => {

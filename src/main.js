@@ -20,6 +20,7 @@ Apify.main(async () => {
         // These are category URLs mostly
         startUrls = [],
         articleUrls = [],
+        // Kept for backwards compat, better to use onlyNewArticlesPerDomain
         onlyNewArticles = false,
         onlyNewArticlesPerDomain = false,
         onlyInsideArticles = true,
@@ -69,11 +70,12 @@ Apify.main(async () => {
     const state = {
         articlesScrapedThisRun: itemCount,
         overallArticlesScraped: new Set(),
+        // Object with domains as keys
         perDomainArticlesScraped: {},
     };
 
-    // In reality, it makes more sense to use the per domain state to keep datasets small
-    // But we have to keep the overall one for backwards compat
+    // This is kept only for backwards compat
+    // Use onlyNewArticlesPerDomain preferably
     let stateDataset;
     if (onlyNewArticles) {
         log.info('loading state dataset...');
@@ -90,9 +92,6 @@ Apify.main(async () => {
             state.overallArticlesScraped.add(url);
         });
         log.info(`Loaded ${state.overallArticlesScraped.size} unique article URLs that were already scraded to be skipped this scrape`);
-    }
-    if (onlyNewArticlesPerDomain) {
-
     }
 
     log.info(`We got ${startUrls.concat(articleUrls).length} start URLs`);
@@ -126,14 +125,15 @@ Apify.main(async () => {
         if (request.userData.label !== 'ARTICLE') {
             // TODO: Refactor this
             await handleCategory({ request, maxDepth, page, $, requestQueue,
-                state, onlyInsideArticles, onlyNewArticles, isUrlArticleDefinition, useGoogleBotHeaders,
+                state, onlyInsideArticles, onlyNewArticles, onlyNewArticlesPerDomain,
+                isUrlArticleDefinition, useGoogleBotHeaders,
                 debug, html, pseudoUrls, linkSelector });
         }
 
         if (request.userData.label === 'ARTICLE') {
             await handleArticle({ request, saveHtml, html, page, $, extendOutputFunction,
                 extendOutputFunctionEvaled, parsedDateFrom, mustHaveDate, minWords,
-                maxArticlesPerCrawl, onlyNewArticles, state,
+                maxArticlesPerCrawl, onlyNewArticles, onlyNewArticlesPerDomain, state,
                 stateDataset });
         }
     };

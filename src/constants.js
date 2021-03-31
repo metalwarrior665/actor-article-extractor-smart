@@ -5,4 +5,5 @@ module.exports = {
         'X-Forwarded-For': '66.249.66.1',
     },
     MAX_DATASET_ITEMS_LOADED: 3 * 1000 * 1000,
+    ARTICLES_SCRAPED_DATASET_PREFIX: 'ARTICLES-SCRAPED-',
 };

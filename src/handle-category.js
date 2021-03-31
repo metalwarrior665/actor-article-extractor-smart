@@ -1,9 +1,9 @@
 const Apify = require('apify');
-const urlLib = require('url');
 
-const { parseDomain, completeHref } = require('./utils');
+const { parseDomain } = require('./utils');
 const { isUrlArticle } = require('./article-recognition.js');
 const { GOOGLE_BOT_HEADERS } = require('./constants');
+const { wasArticleScraped } = require('./articles-scraped-state');
 
 const { log } = Apify.utils;
 
@@ -16,6 +16,7 @@ module.exports = async ({
     state,
     onlyInsideArticles,
     onlyNewArticles,
+    onlyNewArticlesPerDomain,
     isUrlArticleDefinition,
     useGoogleBotHeaders,
     debug,
@@ -41,7 +42,8 @@ module.exports = async ({
             aTagsCount++;
             const relativeOrAbsoluteLink = $(this).attr('href');
             if (relativeOrAbsoluteLink) {
-                const absoluteLink = urlLib.resolve(request.loadedUrl, relativeOrAbsoluteLink);
+                const urlObj = new URL(relativeOrAbsoluteLink, request.loadedUrl);
+                const absoluteLink = urlObj.href;
                 allHrefs.push(absoluteLink);
             }
         });
@@ -61,6 +63,22 @@ module.exports = async ({
     if (onlyNewArticles) {
         links = links.filter((href) => !state.overallArticlesScraped.has(href));
         log.info(`number of inside links after state filter: ${links.length}`);
+    }
+
+    // filtered only new urls for that domain
+    if (onlyNewArticlesPerDomain) {
+        const articlesOnlyNewInDomain = [];
+        for (const url of links) {
+            // This does a theoretically long loading behind
+            // Might wait for up to a minute here on the first url
+            // Once the cache is loaded in the state, it is instant check
+            const wasScraped = await wasArticleScraped(state, url);
+            if (!wasScraped) {
+                articlesOnlyNewInDomain.push(url);
+            }
+        }
+        links = articlesOnlyNewInDomain;
+        log.info(`number of inside link after per domain scraped article filter: ${links.length}`);
     }
 
     // filtered only proper article urls
@@ -94,7 +112,7 @@ module.exports = async ({
             selectedLinks = $(linkSelector)
                 .map(function () { return $(this).attr('href'); }).toArray()
                 .filter((link) => !!link)
-                .map((link) => link.startsWith('http') ? link : completeHref(request.url, link));
+                .map((link) => new URL(link, request.url).href);
         }
         const purls = pseudoUrls.map((req) => new Apify.PseudoUrl(
             req.url,

@@ -3,12 +3,13 @@ const extractor = require('unfluff');
 
 const { countWords, isInDateRange } = require('./article-recognition.js');
 const { executeExtendOutputFn, parseDateFromPage } = require('./utils.js');
+const { addArticleScraped } = require('./articles-scraped-state');
 
 const { log } = Apify.utils;
 
 module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction,
     extendOutputFunctionEvaled, parsedDateFrom, mustHaveDate, minWords,
-    maxArticlesPerCrawl, onlyNewArticles, state, stateDataset }) => {
+    maxArticlesPerCrawl, onlyNewArticles, onlyNewArticlesPerDomain, state, stateDataset }) => {
     const metadata = extractor(html);
 
     const result = {
@@ -39,11 +40,16 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
         return;
     }
 
+    // maybe kept for backwards compat
     if (onlyNewArticles) {
-        if (!state.overallArticlesScraped.has(completeResult.url)) {
-            state.overallArticlesScraped.add(completeResult.url);
+        if (!state.overallArticlesScraped.has(request.url)) {
+            state.overallArticlesScraped.add(request.url);
             await stateDataset.pushData({ url: request.url });
         }
+    }
+
+    if (onlyNewArticlesPerDomain) {
+        await addArticleScraped(state, request.url);
     }
 
     const hasValidDate = mustHaveDate ? isInDateRangeVar : true;

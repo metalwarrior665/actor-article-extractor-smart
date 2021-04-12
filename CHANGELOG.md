@@ -1,6 +1,11 @@
+#### 2021-03-12
+*Fixes*
+- `onlyNewArticles` and `onlyNewArticlesPerDomain` was loading duplicate items which caused excess usage of dataset read.
+
 #### 2021-03-31
 *Features*
 - Added new input option `onlyNewArticlesPerDomain`. This is much more efficient way to deduplicate articles, so use it instead of `onlyNewArticles`.
+- `onlyNewArticlesPerDomain` works also on local datasets
 
 #### 2021-01-21
 - Fix: Now works with Start URLs from a public spreadsheet

@@ -58,7 +58,7 @@ module.exports.wasArticleScraped = async (state, url) => {
 
         const datasetName = `${ARTICLES_SCRAPED_DATASET_PREFIX}${sanitizedDomain}`;
 
-        const articlePaths = await loadDatasetItemsInParallel([datasetName], { batchSize: 10000 })
+        const articlePaths = await loadDatasetItemsInParallel([datasetName], { batchSize: 10000, debugLog: true })
             .then((items) => items.map((item) => item.path));
         for (const articlePath of articlePaths) {
             state.perDomainArticlesScraped[sanitizedDomain].articlePathsSet.add(articlePath);

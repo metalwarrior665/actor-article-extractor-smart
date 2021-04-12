@@ -1,5 +1,7 @@
 const Apify = require('apify');
 
+const client = Apify.newClient();
+
 const { log } = Apify.utils;
 
 const sendMail = async (CUs, limit, notificationEmails, runId) => {
@@ -8,13 +10,13 @@ const sendMail = async (CUs, limit, notificationEmails, runId) => {
         subject: `Article extractor ${runId} reached ${CUs}`,
         text: `Article extractor ${runId} reached ${CUs} which is more than notification limit ${limit}`,
     };
-    await Apify.call('apify/send-mail', actorInput, { waitSecs: 0 });
+    await client.actor('apify/send-mail').call(actorInput, { waitSecs: 0 });
 };
 
 const CUNotification = async (stopAfterCUs, notifyAfterCUs, notificationEmails, notifyAfterCUsPeriodically, notificationState) => {
     log.info('NOTIFICATIONS --- Checking if to send notifications...');
-    const { actorId, actorRunId } = Apify.getEnv();
-    const { stats } = await Apify.client.acts.getRun({ actId: actorId, runId: actorRunId });
+    const { actorRunId } = Apify.getEnv();
+    const { stats } = await client.run(actorRunId).get();
     const CUs = stats.computeUnits;
     if (notifyAfterCUsPeriodically) {
         const { next } = notificationState;

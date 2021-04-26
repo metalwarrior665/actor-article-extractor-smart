@@ -30,6 +30,7 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
 
     // We try to upgrade the date, the default parser is not great
     const parsedPageDate = parseDateFromPage(completeResult, request.url);
+    // console.log(`Updated date from ${completeResult.date} to ${parsedPageDate}`);
     completeResult.date = parsedPageDate || null;
 
     const wordsCount = countWords(completeResult.text);

@@ -177,7 +177,7 @@ module.exports.loadDatasetItemsInParallel = async (datasetIds, options = {}) => 
             limit: requestInfoObj.limit,
             fields,
         };
-        if (!Apify.isAtHome) {
+        if (!Apify.isAtHome()) {
             delete getDataOptions.fields;
         }
         const { items } = await dataset.getData(getDataOptions);

@@ -36,8 +36,9 @@ module.exports.isUrlArticle = (url, isUrlArticleDefinition) => {
 
 module.exports.isInDateRange = (publicationDateISO, dateFrom) => {
     if (!dateFrom) {
-        return true;
+        return !!publicationDateISO;
     }
     const publicationDate = moment(publicationDateISO);
+    console.log(`Comparing publication date ${publicationDate} > ${dateFrom}: ${publicationDate > dateFrom}`)
     return publicationDate > dateFrom;
 };

@@ -74,6 +74,7 @@ module.exports.parseDateFromPage = (result, url) => {
     if (!parsedPageDate) {
         parsedPageDate = findDateInURL(url);
     }
+    return parsedPageDate;
 };
 
 module.exports.evalPageFunction = (extendOutputFunction) => {

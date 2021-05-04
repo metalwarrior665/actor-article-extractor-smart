@@ -41,6 +41,8 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
         return;
     }
 
+    await Apify.setValue('ARTICLE', html, { contentType: 'text/html' });
+
     // maybe kept for backwards compat
     if (onlyNewArticles) {
         if (!state.overallArticlesScraped.has(request.url)) {

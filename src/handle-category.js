@@ -48,12 +48,14 @@ module.exports = async ({
     let links = [];
 
     for (const maybeHref of allATagHrefs) {
+        if (maybeHref) {
         // This can fail if maybeHref is not a valid URL or path
-        try {
-            const urlObj = new URL(maybeHref, request.loadedUrl);
-            const absoluteLink = urlObj.href;
-            links.push(absoluteLink);
-        } catch (e) {}
+            try {
+                const urlObj = new URL(maybeHref, request.loadedUrl);
+                const absoluteLink = urlObj.href;
+                links.push(absoluteLink);
+            } catch (e) {}
+        }
     }
     log.info(`total number of valid links: ${links.length}`);
 

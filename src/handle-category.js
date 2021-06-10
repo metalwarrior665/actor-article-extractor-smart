@@ -133,6 +133,8 @@ module.exports = async ({
         let enqueued = 0;
         for (const url of selectedLinks) {
             for (const purl of purls) {
+                console.log(`PURL: ${purl.regex}`);
+                console.log(`URL: ${url}`);
                 if (purl.matches(url)) {
                     // userData are passed along
                     await requestQueue.addRequest(purl.createRequest(url));

@@ -8,9 +8,19 @@ module.exports.countWords = (text) => {
 };
 
 module.exports.isUrlArticle = (url, isUrlArticleDefinition) => {
+    if (typeof url !== 'string') {
+        return false;
+    }
+    const isImage = ['.jpg', 'jpeg', '.png'].some((ext) => url.endsWith(ext));
+    const isJS = url.endsWith('.js');
+    if (isImage || isJS) {
+        return false;
+    }
+
     if (!isUrlArticleDefinition) {
         return true;
     }
+
     const matches = isUrlArticleDefinition.linkIncludes || [];
     for (const string of matches) {
         if (url.toLowerCase().includes(string)) {

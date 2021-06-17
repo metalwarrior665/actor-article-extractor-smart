@@ -52,9 +52,13 @@ module.exports.findDateInURL = findDateInURL;
 
 module.exports.parseDomain = (url) => {
     if (!url) return null;
-    const parsed = new URL(url);
-    if (parsed && parsed.host) {
-        return parsed.host.replace('www.', '');
+    try {
+        const parsed = new URL(url);
+        if (parsed && parsed.host) {
+            return parsed.host.replace('www.', '');
+        }
+    } catch (e) {
+        return null;
     }
 };
 

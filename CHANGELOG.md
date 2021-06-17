@@ -1,3 +1,8 @@
+#### 2021-6-17
+*Features*
+- Added `enqueueFromArticles` option to enqueue articles from article pages to get even more articles from the website. You need to enable it in input.
+- Added `scanSitemaps` and `sitemapUrls` parameters. `scanSitemaps` automatically searches sitemaps for articles for each start URL and `sitemapUrls` allows you to add the sitemaps manually if necessary. Be careful that `scanSitemaps` may dump a huge amount of (sometimes old) article URLs into the scraping process
+
 #### 2021-03-12
 *Fixes*
 - `onlyNewArticles` and `onlyNewArticlesPerDomain` was loading duplicate items which caused excess usage of dataset read.

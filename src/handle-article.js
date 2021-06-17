@@ -37,7 +37,7 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
 
     const isInDateRangeVar = isInDateRange(completeResult.date, parsedDateFrom);
     if (mustHaveDate && !isInDateRangeVar && !!completeResult.date) {
-        log.warning(`ARTICLE - ${request.userData.index} - DATE NOT IN RANGE: ${completeResult.date}`);
+        log.warning(`ARTICLE - DATE NOT IN RANGE: ${completeResult.date}`);
         return;
     }
 

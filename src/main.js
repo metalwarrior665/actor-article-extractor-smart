@@ -29,7 +29,9 @@ Apify.main(async () => {
         onlyNewArticlesPerDomain = false,
         onlyInsideArticles = true,
         enqueueFromArticles = false,
-        searchFromSitemaps = false,
+        // NOTE: Be very careful about sitemaps URLs as those can explode in URLs
+        // with old articles and garbage
+        scanSitemaps = false,
         saveHtml = false,
         useGoogleBotHeaders = false,
         minWords = 150,
@@ -65,6 +67,8 @@ Apify.main(async () => {
     if ((arePseudoUrls && !linkSelector) || (linkSelector && !arePseudoUrls)) {
         log.warning('WARNING - If you use only Pseudo URLs or only Link selector, they will not work. You need to use them together.');
     }
+
+    const proxyConfigurationClass = await Apify.createProxyConfiguration(proxyConfiguration);
 
     const extendOutputFunctionEvaled = evalPageFunction(extendOutputFunction);
 
@@ -103,12 +107,28 @@ Apify.main(async () => {
     log.info(`We got ${startUrls.concat(articleUrls).length} start URLs`);
 
     let sources = getStartSources({ startUrls, articleUrls, useGoogleBotHeaders });
-    const sitemapSources = await getRequestsFromSitemaps({ sitemapUrls, searchFromSitemaps });
+
+    const requestQueue = await Apify.openRequestQueue();
+
+    // Running separate crawler here. We could integrate it into the main one
+    // but this is probably cleaner
+    const sitemapSources = await getRequestsFromSitemaps({
+        sitemapUrls,
+        scanSitemaps,
+        startUrls,
+        proxyConfigurationClass,
+        events: Apify.events,
+        requestQueue,
+        isUrlArticleDefinition,
+        state,
+        onlyInsideArticles,
+        onlyNewArticles,
+        onlyNewArticlesPerDomain,
+    });
 
     sources = sources.concat(sitemapSources);
 
-    const requestQueue = await Apify.openRequestQueue();
-    const requestList = await Apify.openRequestList('LIST', sources);
+    const requestList = await Apify.openRequestList('MAIN-LIST', sources);
 
     // This can be Cheerio or Puppeteer page so we have to differentiate that often
     // That's why there will be often "if (page) {...}"
@@ -148,8 +168,6 @@ Apify.main(async () => {
                 debug, html, pseudoUrls, linkSelector });
         }
     };
-
-    const proxyConfigurationClass = await Apify.createProxyConfiguration(proxyConfiguration);
 
     const genericCrawlerOptions = {
         requestList,

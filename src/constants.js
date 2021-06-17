@@ -40,5 +40,8 @@ module.exports = {
         '/media/sitemap/index.xml.tar.gz',
         '/robots.txt',
         '/_sitemap-categories.xml',
-    ]
+    ],
+    SITEMAP_EXTENSIONS: [
+        '.xml', '.gz', '.txt',
+    ],
 };

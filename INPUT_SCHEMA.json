@@ -40,6 +40,18 @@
             "description": "Normally, the scrapers only enqueues from category pages. This option can help to gather more articles per run.",
             "default": false
         },
+        "scanSitemaps": {
+            "title": "Find articles in sitemaps (dangerous)",
+            "type": "boolean",
+            "description": "Will scan different sitemaps of the first URL for articles. Be very careful with this option as it can load a huge amount of (sometimes old) articles and the scrape time/cost will raise.",
+            "default": false
+        },
+        "sitemapUrls": {
+            "title": "Sitemap URLs (safer)",
+            "type": "array",
+            "description": "Optionally you can also provide chosen sitemap URLs that have the articles you need to extract.",
+            "editor": "requestListSources"
+        },
         "saveHtml": {
             "title": "Save full HTML",
             "type": "boolean",

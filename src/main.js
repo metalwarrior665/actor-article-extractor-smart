@@ -7,6 +7,7 @@ const { setupNotifications } = require('./compute-units-notification.js');
 const { MAX_DATASET_ITEMS_LOADED } = require('./constants.js');
 const getStartSources = require('./start-urls');
 const { loadDatasetItemsInParallel } = require('./load-datasets');
+const { getRequestsFromSitemaps } = require('./sitemaps');
 
 const handleCategory = require('./handle-category');
 const handleArticle = require('./handle-article');
@@ -22,11 +23,13 @@ Apify.main(async () => {
         // These are category URLs mostly
         startUrls = [],
         articleUrls = [],
+        sitemapUrls = [],
         // Kept for backwards compat, better to use onlyNewArticlesPerDomain
         onlyNewArticles = false,
         onlyNewArticlesPerDomain = false,
         onlyInsideArticles = true,
         enqueueFromArticles = false,
+        searchFromSitemaps = false,
         saveHtml = false,
         useGoogleBotHeaders = false,
         minWords = 150,
@@ -99,7 +102,10 @@ Apify.main(async () => {
 
     log.info(`We got ${startUrls.concat(articleUrls).length} start URLs`);
 
-    const sources = getStartSources({ startUrls, articleUrls, useGoogleBotHeaders });
+    let sources = getStartSources({ startUrls, articleUrls, useGoogleBotHeaders });
+    const sitemapSources = await getRequestsFromSitemaps({ sitemapUrls, searchFromSitemaps });
+
+    sources = sources.concat(sitemapSources);
 
     const requestQueue = await Apify.openRequestQueue();
     const requestList = await Apify.openRequestList('LIST', sources);

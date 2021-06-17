@@ -26,6 +26,7 @@ Apify.main(async () => {
         onlyNewArticles = false,
         onlyNewArticlesPerDomain = false,
         onlyInsideArticles = true,
+        enqueueFromArticles = false,
         saveHtml = false,
         useGoogleBotHeaders = false,
         minWords = 150,
@@ -124,19 +125,21 @@ Apify.main(async () => {
             throw new Error('We got captcha on:', request.url);
         }
 
-        if (request.userData.label !== 'ARTICLE') {
-            // TODO: Refactor this
-            await handleCategory({ request, maxDepth, page, $, requestQueue,
-                state, onlyInsideArticles, onlyNewArticles, onlyNewArticlesPerDomain,
-                isUrlArticleDefinition, useGoogleBotHeaders,
-                debug, html, pseudoUrls, linkSelector });
-        }
-
         if (request.userData.label === 'ARTICLE') {
             await handleArticle({ request, saveHtml, html, page, $, extendOutputFunction,
                 extendOutputFunctionEvaled, parsedDateFrom, mustHaveDate, minWords,
                 maxArticlesPerCrawl, onlyNewArticles, onlyNewArticlesPerDomain, state,
                 stateDataset });
+        }
+
+        // If we enqueue from articles, we work with the like with categories
+        // after we scrape them
+        if (request.userData.label !== 'ARTICLE' || enqueueFromArticles) {
+            // TODO: Refactor this
+            await handleCategory({ request, maxDepth, page, $, requestQueue,
+                state, onlyInsideArticles, onlyNewArticles, onlyNewArticlesPerDomain,
+                isUrlArticleDefinition, useGoogleBotHeaders,
+                debug, html, pseudoUrls, linkSelector });
         }
     };
 

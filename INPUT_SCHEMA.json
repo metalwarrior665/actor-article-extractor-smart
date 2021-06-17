@@ -34,6 +34,12 @@
             "description": "If true, will scrape only articles that are on the domain from where they are linked.",
             "default": true
         },
+        "enqueueFromArticles": {
+            "title": "Enqueue articles from articles",
+            "type": "boolean",
+            "description": "Normally, the scrapers only enqueues from category pages. This option can help to gather more articles per run.",
+            "default": false
+        },
         "saveHtml": {
             "title": "Save full HTML",
             "type": "boolean",

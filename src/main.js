@@ -60,6 +60,15 @@ Apify.main(async () => {
         notifyAfterCUsPeriodically,
     } = input;
 
+    const hasStartUrls = Array.isArray(startUrls) && startUrls.length > 0;
+    const hasArticleUrls = Array.isArray(articleUrls) && articleUrls.length > 0;
+    const hasSitemapUrls = Array.isArray(sitemapUrls) && sitemapUrls.length > 0;
+    const hasAnyUrls = hasStartUrls || hasArticleUrls || hasSitemapUrls;
+
+    if (!hasAnyUrls) {
+        throw new Error('WRONG INPUT - You have to provide at least one of: startUrls, articleUrls, sitemapUrls');
+    }
+
     // Valid format is either YYYY-MM-DD or format like "1 week" or "20 days"
     const parsedDateFrom = parseDateToMoment(dateFrom);
 

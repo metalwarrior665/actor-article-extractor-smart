@@ -8,7 +8,8 @@
             "title": "Category URLs",
             "type": "array",
             "description": "Can be main page URL or any category URLs. Article pages are found and enqueued from these. If you want direct article URLs, use `articleUrls` input instead",
-            "editor": "requestListSources"
+            "editor": "requestListSources",
+            "prefill": [{ "url": "https://www.theguardian.com" }]
         },
         "articleUrls": {
             "title": "Article URLs",

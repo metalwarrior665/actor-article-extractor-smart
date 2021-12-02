@@ -186,6 +186,8 @@ Apify.main(async () => {
         maxRequestRetries: 3,
         maxRequestsPerCrawl: maxPagesPerCrawl,
         proxyConfiguration: proxyConfigurationClass,
+        // There can be a lot of waiting in between requests for state sync
+        handlePageTimeoutSecs: 600,
     };
 
     const cheerioCrawlerOptions = {

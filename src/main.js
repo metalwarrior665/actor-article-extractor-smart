@@ -12,8 +12,6 @@ const { getRequestsFromSitemaps } = require('./sitemaps');
 const handleCategory = require('./handle-category');
 const handleArticle = require('./handle-article');
 
-// TODO1: Got a powerful idea, we should try to scrape sitemaps!!!
-// TODO2: Enqueue from articles too!
 Apify.main(async () => {
     const input = await Apify.getValue('INPUT');
     log.info('Input');

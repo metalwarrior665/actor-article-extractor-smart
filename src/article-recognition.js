@@ -11,8 +11,10 @@ module.exports.isUrlArticle = (url, isUrlArticleDefinition) => {
     if (typeof url !== 'string') {
         return false;
     }
-    const isImage = ['.jpg', 'jpeg', '.png'].some((ext) => url.endsWith(ext));
-    const isJS = url.endsWith('.js');
+    const isImage1 = ['.jpg', 'jpeg', '.png'].some((ext) => url.endsWith(ext));
+    const isImage2 = ['.jpg?', 'jpeg?', '.png?'].some((ext) => url.includes(ext));
+    const isImage = isImage1 || isImage2;
+    const isJS = url.endsWith('.js') || url.includes('.js?');
     if (isImage || isJS) {
         return false;
     }

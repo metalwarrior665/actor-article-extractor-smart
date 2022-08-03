@@ -13,7 +13,7 @@ const handleCategory = require('./handle-category');
 const handleArticle = require('./handle-article');
 
 Apify.main(async () => {
-    const input = await Apify.getValue('INPUT');
+    const input = await Apify.getInput();
     log.info('Input');
     console.dir(input);
 

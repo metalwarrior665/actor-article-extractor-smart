@@ -56,6 +56,9 @@ Apify.main(async () => {
         notifyAfterCUs,
         notificationEmails,
         notifyAfterCUsPeriodically,
+
+        // For local testing
+        headless,
     } = input;
 
     const hasStartUrls = Array.isArray(startUrls) && startUrls.length > 0;
@@ -195,6 +198,11 @@ Apify.main(async () => {
 
     const puppeteerCrawlerOptions = {
         ...genericCrawlerOptions,
+        launchContext: {
+            launchOptions: {
+                headless,
+            },
+        },
         preNavigationHooks: [(crawlingContext, gotoOptions) => { gotoOptions.timeout = 120000; }],
     };
 

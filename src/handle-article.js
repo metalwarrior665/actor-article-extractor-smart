@@ -36,7 +36,7 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
     const wordsCount = countWords(completeResult.text);
 
     const isInDateRangeVar = isInDateRange(completeResult.date, parsedDateFrom);
-    if (mustHaveDate && !isInDateRangeVar && !!completeResult.date) {
+    if (parsedDateFrom && !isInDateRangeVar && !!completeResult.date) {
         log.warning(`ARTICLE - DATE NOT IN RANGE: ${completeResult.date} --- ${request.url}`);
         return;
     }

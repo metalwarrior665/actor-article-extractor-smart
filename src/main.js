@@ -144,11 +144,11 @@ Apify.main(async () => {
     // That's why there will be often "if (page) {...}"
     const handlePageFunction = async ({ request, $, body, page }) => {
         if (page && (pageWaitMs)) {
-            await page.waitFor(pageWaitMs);
+            await page.waitForTimeout(pageWaitMs);
         }
 
         if (page && (pageWaitSelector)) {
-            await page.waitFor(pageWaitSelector);
+            await page.waitForSelector(pageWaitSelector);
         }
 
         const html = page ? await page.content() : body;
@@ -203,7 +203,15 @@ Apify.main(async () => {
                 headless,
             },
         },
-        preNavigationHooks: [(crawlingContext, gotoOptions) => { gotoOptions.timeout = 120000; }],
+        preNavigationHooks: [(crawlingContext, gotoOptions) => {
+            gotoOptions.timeout = 120000;
+        }],
+        sessionPoolOptions: {
+            sessionOptions: {
+                // We want to switch IP address if the site timeouts, otherwise we should rarely error out
+                maxErrorScore: 1,
+            },
+        },
     };
 
     const crawler = useBrowser

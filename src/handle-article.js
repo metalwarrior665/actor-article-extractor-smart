@@ -12,6 +12,8 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
     maxArticlesPerCrawl, onlyNewArticles, onlyNewArticlesPerDomain, state, stateDataset }) => {
     const metadata = extractor(html);
 
+    // await Apify.setValue('ARTICLE', html, { contentType: 'text/html' });
+
     const result = {
         url: request.url,
         loadedUrl: request.loadedUrl,
@@ -28,20 +30,9 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
     }
     const completeResult = { ...result, ...userResult };
 
-    // We try to upgrade the date, the default parser is not great
-    const parsedPageDate = parseDateFromPage(completeResult, request.url);
-    // console.log(`Updated date from ${completeResult.date} to ${parsedPageDate}`);
-    completeResult.date = parsedPageDate || null;
+    
 
     const wordsCount = countWords(completeResult.text);
-
-    const isInDateRangeVar = isInDateRange(completeResult.date, parsedDateFrom);
-    if (parsedDateFrom && !isInDateRangeVar && !!completeResult.date) {
-        log.warning(`ARTICLE - DATE NOT IN RANGE: ${completeResult.date} --- ${request.url}`);
-        return;
-    }
-
-    // await Apify.setValue('ARTICLE', html, { contentType: 'text/html' });
 
     // maybe kept for backwards compat
     if (onlyNewArticles) {
@@ -55,12 +46,21 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
         await addArticleScraped(state, request.url);
     }
 
-    const hasValidDate = mustHaveDate ? isInDateRangeVar : true;
+    // We try to upgrade the date, the default parser is not great
+    const parsedPageDate = parseDateFromPage(completeResult, request.url);
+    // console.log(`Updated date from ${completeResult.date} to ${parsedPageDate}`);
+    completeResult.date = parsedPageDate || null;
+
+    const hasValidDate = mustHaveDate ? !!completeResult.date : true;
+
+    // Is false if there is no date
+    const isInDateRangeVar = parsedDateFrom ? isInDateRange(completeResult.date, parsedDateFrom) : true;
 
     const isArticle =
         hasValidDate
+        && isInDateRangeVar
         && !!completeResult.title
-        && wordsCount > minWords;
+        && wordsCount >= minWords;
 
     if (isArticle) {
         log.info(`IS VALID ARTICLE --- ${request.url}`);
@@ -72,7 +72,24 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
             process.exit(0);
         }
     } else {
-        log.warning(`IS NOT VALID ARTICLE --- date: ${hasValidDate}, `
-            + `title: ${!!completeResult.title}, words: ${wordsCount}, dateRange: ${isInDateRangeVar} --- ${request.url}`);
+        const reasons = [];
+        if (!hasValidDate) {
+            reasons.push(`[Article has no date]`);
+        }
+
+        if (!completeResult.title) {
+            reasons.push(`[Article has no title]`);
+        }
+
+        if (wordsCount < minWords) {
+            reasons.push(`[Article has too few words: ${wordsCount} (should be at least ${minWords})]`);
+        }
+
+        if (parsedDateFrom && !isInDateRangeVar && hasValidDate) {
+            reasons.push(`[Article date is not in date range (${completeResult.date})]`);
+        }
+
+        // Date not in range is handled above
+        log.warning(`IS NOT VALID ARTICLE --- Reasons: ${reasons.join(', ')} --- ${request.url}`);
     }
 };

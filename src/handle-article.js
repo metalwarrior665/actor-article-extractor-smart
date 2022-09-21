@@ -9,7 +9,7 @@ const { log } = Apify.utils;
 
 module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction,
     extendOutputFunctionEvaled, parsedDateFrom, mustHaveDate, minWords,
-    maxArticlesPerCrawl, onlyNewArticles, onlyNewArticlesPerDomain, state, stateDataset }) => {
+    maxArticlesPerCrawl, onlyNewArticles, onlyNewArticlesPerDomain, state, stateDataset, saveSnapshotsOfInvalidArticles }) => {
     const metadata = extractor(html);
 
     // await Apify.setValue('ARTICLE', html, { contentType: 'text/html' });
@@ -29,8 +29,6 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
             extendOutputFunction, extendOutputFunctionEvaled, item: result });
     }
     const completeResult = { ...result, ...userResult };
-
-    
 
     const wordsCount = countWords(completeResult.text);
 
@@ -91,5 +89,17 @@ module.exports = async ({ request, saveHtml, html, page, $, extendOutputFunction
 
         // Date not in range is handled above
         log.warning(`IS NOT VALID ARTICLE --- Reasons: ${reasons.join(', ')} --- ${request.url}`);
+
+        if (saveSnapshotsOfInvalidArticles) {
+            log.info(`Saved snapshot of the invalid article page to Key-Value Store with key: ${recordKey}`);
+            const urlObj = new URL(request.url);
+            const sanitizedUrlPath = `${urlObj.pathname}-${urlObj.search}`.replace(/[^a-zA-Z0-9]/g, '-');
+            const recordKey = `INVALID-ARTICLE-${sanitizedUrlPath}`;
+            if (page) {
+                await Apify.utils.puppeteer.saveSnapshot(page, { key: recordKey });
+            } else {
+                await Apify.setValue(recordKey, html, { contentType: 'text/html' });
+            }
+        }
     }
 };

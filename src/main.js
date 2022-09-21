@@ -31,6 +31,7 @@ Apify.main(async () => {
         // with old articles and garbage
         scanSitemaps = false,
         saveHtml = false,
+        saveSnapshotsOfInvalidArticles = false,
         useGoogleBotHeaders = false,
         minWords = 150,
         dateFrom,
@@ -165,7 +166,7 @@ Apify.main(async () => {
             await handleArticle({ request, saveHtml, html, page, $, extendOutputFunction,
                 extendOutputFunctionEvaled, parsedDateFrom, mustHaveDate, minWords,
                 maxArticlesPerCrawl, onlyNewArticles, onlyNewArticlesPerDomain, state,
-                stateDataset });
+                stateDataset, saveSnapshotsOfInvalidArticles });
         }
 
         // If we enqueue from articles, we work with the like with categories

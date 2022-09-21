@@ -1,3 +1,8 @@
+#### 2022-09-21
+*Features*
+- Nicer messages explaining why an article was marked as invalid
+- Added `saveSnapshotsOfInvalidArticles` option to input
+
 #### 2021-6-17
 *Features*
 - Added `enqueueFromArticles` option to enqueue articles from article pages to get even more articles from the website. You need to enable it in input.

@@ -58,6 +58,12 @@
             "type": "boolean",
             "description": "Saves full HTML of the article page but makes data less readable."
         },
+        "saveSnapshotsOfInvalidArticles": {
+            "title": "Save snapshots of invalid article pages",
+            "type": "boolean",
+            "description": "Stores HTML and screenshot for each page that was marked as not valid article to Key-Value Store. Useful for debugging.",
+            "default": false
+        },
         "useGoogleBotHeaders": {
             "title": "Use Google Bot headers",
             "type": "boolean",
